@@ -24,6 +24,13 @@ const translations = {
     keywords: "Missing keywords",
     careers: "Adjacent roles to explore",
     copy: "Copy summary",
+    download: "Download JSON",
+    mirrorEyebrow: "Static mirror",
+    mirrorTitle: "Open the secure app to run analysis.",
+    mirrorCopy: "This page is a static mirror. Resume analysis runs on the live FastAPI service.",
+    openLive: "Open live analyzer",
+    footerPrivacy: "Uploaded files are processed by the server for the analysis request.",
+    footerKeys: "Provider keys stay server-side and are never sent to the browser.",
   },
   he: {
     eyebrow: "מודיעין ATS לצד המועמד",
@@ -50,8 +57,19 @@ const translations = {
     keywords: "מילות מפתח חסרות",
     careers: "תפקידים סמוכים שכדאי לבדוק",
     copy: "העתק סיכום",
+    download: "הורד JSON",
+    mirrorEyebrow: "מראה סטטית",
+    mirrorTitle: "פתח את האפליקציה המאובטחת כדי להריץ ניתוח.",
+    mirrorCopy: "העמוד הזה סטטי. ניתוח קורות החיים רץ בשירות FastAPI החי.",
+    openLive: "פתח את המנתח החי",
+    footerPrivacy: "קבצים שמועלים מעובדים בצד השרת עבור בקשת הניתוח.",
+    footerKeys: "מפתחות provider נשארים בצד השרת ולא נשלחים לדפדפן.",
   },
 };
+
+const runtimeConfig = window.SignalCVConfig || {};
+const apiBaseUrl = runtimeConfig.API_BASE_URL || (window.location.protocol === "file:" ? "http://127.0.0.1:8000" : "");
+const isStaticMirror = Boolean(runtimeConfig.STATIC_MIRROR);
 
 const form = document.getElementById("analysisForm");
 const resumeFile = document.getElementById("resumeFile");
@@ -65,6 +83,9 @@ const statusCopy = document.getElementById("statusCopy");
 const signalVisual = document.getElementById("signalVisual");
 const results = document.getElementById("results");
 const languageToggle = document.getElementById("languageToggle");
+const downloadButton = document.getElementById("downloadResult");
+const pagesMirror = document.getElementById("pagesMirror");
+const liveAppLink = document.getElementById("liveAppLink");
 
 let currentLanguage = "en";
 let lastResult = null;
@@ -122,7 +143,7 @@ function validateInputs() {
 
 async function postForm(url) {
   validateInputs();
-  const response = await fetch(url, {
+  const response = await fetch(`${apiBaseUrl}${url}`, {
     method: "POST",
     body: buildFormData(),
   });
@@ -131,6 +152,16 @@ async function postForm(url) {
     throw new Error(payload.detail || "Request failed.");
   }
   return payload;
+}
+
+function configureStaticMirror() {
+  if (!isStaticMirror) return;
+  const liveUrl = runtimeConfig.LIVE_APP_URL || "https://ats-resume-analyzer.onrender.com";
+  pagesMirror.classList.remove("hidden");
+  liveAppLink.href = liveUrl;
+  precheckButton.disabled = true;
+  analyzeButton.disabled = true;
+  setStatus("Static mirror", "Open the live analyzer to upload files and run the check.", "idle");
 }
 
 function updateFileLabels() {
@@ -296,4 +327,16 @@ document.getElementById("copyResult").addEventListener("click", async () => {
   }, 1400);
 });
 
+downloadButton.addEventListener("click", () => {
+  if (!lastResult) return;
+  const blob = new Blob([JSON.stringify(lastResult, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "ats_analysis_report.json";
+  link.click();
+  URL.revokeObjectURL(url);
+});
+
 setLanguage("en");
+configureStaticMirror();

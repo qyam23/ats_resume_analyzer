@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+import os
 from pathlib import Path
 
 from pydantic import Field
@@ -23,13 +24,16 @@ class Settings(BaseSettings):
     app_env: str = "development"
     api_host: str = "127.0.0.1"
     api_port: int = 8000
+    port: int = 8000
     streamlit_port: int = 8501
+    allowed_origins: str = "http://localhost:8501,http://127.0.0.1:8501"
     max_upload_mb: int = 10
     rate_limit_per_minute: int = 20
     default_locale: str = "en"
     enable_ocr: bool = True
     enable_llm_enhancements: bool = True
     enable_web_research: bool = True
+    enable_internal_endpoints: bool = True
     api_only_mode: bool = True
     embedding_backend: str = "local"
     embedding_model: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
@@ -48,6 +52,14 @@ class Settings(BaseSettings):
     reports_dir: Path = BASE_DIR / "reports" / "generated"
     temp_dir: Path = BASE_DIR / "temp"
     local_settings_path: Path = BASE_DIR / ".local_settings.json"
+
+    @property
+    def runtime_port(self) -> int:
+        return int(os.getenv("PORT") or self.port or self.api_port or 8000)
+
+    @property
+    def cors_origins(self) -> list[str]:
+        return [origin.strip() for origin in self.allowed_origins.split(",") if origin.strip()]
 
 
 @lru_cache(maxsize=1)

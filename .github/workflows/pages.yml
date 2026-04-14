@@ -1,0 +1,55 @@
+name: GitHub Pages static mirror
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - public_site/**
+      - .github/workflows/pages.yml
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build static mirror
+        shell: bash
+        env:
+          LIVE_APP_URL: ${{ vars.RENDER_LIVE_URL || 'https://ats-resume-analyzer.onrender.com' }}
+        run: |
+          rm -rf pages_dist
+          mkdir -p pages_dist/assets
+          cp public_site/index.html pages_dist/index.html
+          cp public_site/app.js pages_dist/assets/app.js
+          cp public_site/styles.css pages_dist/assets/styles.css
+          cat > pages_dist/assets/site-config.js <<EOF
+          window.SignalCVConfig = {
+            API_BASE_URL: "",
+            LIVE_APP_URL: "${LIVE_APP_URL}",
+            STATIC_MIRROR: true,
+          };
+          EOF
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: pages_dist
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

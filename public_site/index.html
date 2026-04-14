@@ -8,7 +8,7 @@
       name="description"
       content="Candidate-side ATS resume analysis that helps job seekers pass screening and improve fit without inventing experience."
     />
-    <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="assets/styles.css" />
   </head>
   <body>
     <main class="page-shell">
@@ -30,15 +30,25 @@
             </p>
             <a class="primary-link" href="#analyzer" data-i18n="start">Start the check</a>
           </div>
-          <div class="orb-stage" aria-hidden="true">
-            <div class="orb"></div>
-            <div class="orbit orbit-one"></div>
-            <div class="orbit orbit-two"></div>
-            <div class="scan-card scan-a">Resume parsed</div>
-            <div class="scan-card scan-b">Role signals mapped</div>
-            <div class="scan-card scan-c">ATS risk scored</div>
+          <div class="hero-visual" aria-hidden="true">
+            <img
+              src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80"
+              alt=""
+            />
+            <div class="signal-stack">
+              <span>Resume parsed</span>
+              <span>Role signals mapped</span>
+              <span>ATS risk scored</span>
+            </div>
           </div>
         </div>
+      </section>
+
+      <section class="pages-mirror hidden" id="pagesMirror">
+        <p class="eyebrow" data-i18n="mirrorEyebrow">Live analyzer</p>
+        <h2 data-i18n="mirrorTitle">Open the secure app to run analysis.</h2>
+        <p data-i18n="mirrorCopy">This mirror is static. Resume analysis runs on the FastAPI service.</p>
+        <a id="liveAppLink" class="primary-link" href="#" data-i18n="openLive">Open live analyzer</a>
       </section>
 
       <section id="analyzer" class="workspace" aria-labelledby="workspace-title">
@@ -142,8 +152,15 @@
           </div>
         </section>
       </section>
+
+      <footer class="site-footer">
+        <p data-i18n="footerPrivacy">Uploaded files are processed by the server for the analysis request.</p>
+        <p data-i18n="footerKeys">Provider keys stay server-side and are never sent to the browser.</p>
+        <a href="https://github.com/qyam23/ats_resume_analyzer" rel="noreferrer" target="_blank">GitHub</a>
+      </footer>
     </main>
 
-    <script src="/assets/app.js"></script>
+    <script src="assets/site-config.js"></script>
+    <script src="assets/app.js"></script>
   </body>
 </html>

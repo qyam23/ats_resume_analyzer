@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: ats-resume-analyzer
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python launch.py
+    healthCheckPath: /health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: PYTHON_VERSION
+        value: 3.10.13
+      - key: LLM_PROVIDER
+        value: openai
+      - key: ENABLE_LLM_ENHANCEMENTS
+        value: false
+      - key: ENABLE_WEB_RESEARCH
+        value: true
+      - key: ENABLE_INTERNAL_ENDPOINTS
+        value: false
+      - key: API_ONLY_MODE
+        value: true
+      - key: ALLOWED_ORIGINS
+        value: https://ats-resume-analyzer.onrender.com
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false

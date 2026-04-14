@@ -36,7 +36,8 @@ limiter = Limiter(key_func=get_remote_address, default_limits=[f"{settings.rate_
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    logger.info("ATS Resume Analyzer API starting on %s:%s", settings.api_host, settings.api_port)
+    current = get_settings()
+    logger.info("ATS Resume Analyzer API starting on %s:%s", current.api_host, current.runtime_port)
     yield
 
 
@@ -45,7 +46,7 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8501", "http://127.0.0.1:8501"],
+    allow_origins=settings.cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -65,6 +66,11 @@ def _active_model_name() -> str:
     if current.llm_provider == "local_llm":
         return current.local_llm_model
     return "local-rules"
+
+
+def _require_internal_endpoints() -> None:
+    if not get_settings().enable_internal_endpoints:
+        raise HTTPException(status_code=404, detail="Not found")
 
 
 @app.get("/", response_class=FileResponse)
@@ -91,11 +97,13 @@ def health() -> dict[str, object]:
 
 @app.get("/settings")
 def get_runtime_settings():
+    _require_internal_endpoints()
     return settings_service.get_runtime_settings_summary().model_dump()
 
 
 @app.post("/settings")
 def save_runtime_settings(payload: LocalSettingsPayload):
+    _require_internal_endpoints()
     return settings_service.save_runtime_settings(payload).model_dump()
 
 
@@ -338,6 +346,7 @@ async def public_analyze(
 
 @app.post("/preflight")
 def run_preflight(payload: PreflightRequest) -> dict[str, object]:
+    _require_internal_endpoints()
     current = get_settings()
     provider = get_llm_provider()
     model_name = (
@@ -458,6 +467,7 @@ async def analyze_resume(
     jd_image: Optional[UploadFile] = File(default=None),
     fixed_resume_slot: str = Form(default=""),
 ):
+    _require_internal_endpoints()
     del request
     try:
         if not pdf_resume and not docx_resume and not fixed_resume_slot:

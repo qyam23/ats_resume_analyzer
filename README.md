@@ -15,13 +15,16 @@ Local-first candidate-side ATS analyzer for checking ATS hygiene, matching a res
 
 ## Architecture
 
-- `api/`: FastAPI backend and secured analysis endpoint
-- `frontend/`: Streamlit command-center UI with bilingual controls, RTL support, and visual analysis timeline
+- `api/`: FastAPI backend, public UI host, secured public analysis endpoints, and internal local endpoints
+- `public_site/`: production public web UI served by FastAPI from `/`
+- `frontend/`: Streamlit command-center UI for local/internal use only
 - `core/`: Parsing, extraction, scoring, matching, and report generation
 - `providers/`: Swappable OpenAI, Gemini, and local provider interfaces
 - `config/`: Settings, logging, redaction, and request guardrails
 - `tests/`: Unit tests for scoring, security, and report behavior
 - `samples/`: Example JD input and report shape
+- `render.yaml`: Render Web Service blueprint
+- `.github/workflows/pages.yml`: optional GitHub Pages static mirror workflow
 
 Reference inspirations used for architecture ideas only:
 
@@ -52,15 +55,17 @@ copy .env.example .env
 
 ## Run
 
-### Backend only
+### Public app only
 
 ```powershell
 cd C:\Users\user\Documents\Playground\ats_resume_analyzer
 .\.venv\Scripts\Activate.ps1
-uvicorn api.main:app --reload --host 127.0.0.1 --port 8000
+python launch.py
 ```
 
-### Frontend only
+Open `http://localhost:8000`. FastAPI serves `public_site/index.html` from `/`, and the browser calls the same-origin `/public/precheck` and `/public/analyze` endpoints.
+
+### Internal Streamlit
 
 ```powershell
 cd C:\Users\user\Documents\Playground\ats_resume_analyzer
@@ -73,6 +78,71 @@ streamlit run frontend/app.py --server.port 8501
 ```powershell
 .\setup_local.bat
 .\run_local.bat
+```
+
+`run_local.bat` starts FastAPI on `127.0.0.1:8000` and Streamlit on `127.0.0.1:8501`. Streamlit is not the production UI.
+
+## Public production architecture
+
+- Render runs one Python Web Service using FastAPI only
+- `public_site` is served from the same Render domain at `/`
+- Public API calls are same-origin under `/public/precheck` and `/public/analyze`
+- OpenAI and Gemini keys stay server-side in Render environment variables
+- Internal endpoints (`/settings`, `/preflight`, `/analyze`) are disabled in production when `ENABLE_INTERNAL_ENDPOINTS=false`
+- Streamlit remains available for local diagnostics and private workflows only
+
+## Render deployment
+
+The repository includes `render.yaml` for a Render Blueprint.
+
+Build command:
+
+```bash
+pip install -r requirements.txt
+```
+
+Start command:
+
+```bash
+python launch.py
+```
+
+The launcher binds to `0.0.0.0` when `APP_ENV=production` and reads the port from Render's `PORT` environment variable, falling back to `8000` locally.
+
+Required or recommended Render environment variables:
+
+- `APP_ENV=production`
+- `PYTHON_VERSION=3.10.13`
+- `PORT` is provided by Render
+- `LLM_PROVIDER=openai` or `gemini`
+- `OPENAI_API_KEY` set as a secret if OpenAI enhancements are enabled
+- `GEMINI_API_KEY` set as a secret if Gemini enhancements are enabled
+- `ENABLE_LLM_ENHANCEMENTS=false` for deterministic public mode, or `true` for provider-enhanced analysis
+- `ENABLE_WEB_RESEARCH=true`
+- `ENABLE_INTERNAL_ENDPOINTS=false`
+- `API_ONLY_MODE=true`
+- `ALLOWED_ORIGINS=https://ats-resume-analyzer.onrender.com`
+
+Health check path:
+
+```text
+/health
+```
+
+## GitHub Pages mirror
+
+GitHub Pages is optional and only publishes a static mirror. It does not run resume analysis. The workflow builds `public_site` into a Pages artifact, sets `STATIC_MIRROR=true`, disables upload/analyze actions, and shows an `Open live analyzer` CTA.
+
+Workflow file:
+
+```text
+.github/workflows/pages.yml
+```
+
+Set this repository variable if the final Render URL differs from the default:
+
+```text
+RENDER_LIVE_URL=https://your-render-service.onrender.com
 ```
 
 ## Providers and local mode

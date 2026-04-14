@@ -1,0 +1,16 @@
+{
+  "scores": {
+    "parseability_score": 78,
+    "consistency_score": 91,
+    "keyword_match_score": 80,
+    "semantic_match_score": 84,
+    "leadership_alignment_score": 76,
+    "quantified_impact_score": 68,
+    "final_ats_score": 82.4
+  },
+  "executive_summary": {
+    "en": "Strong semantic alignment with a few ATS hygiene issues.",
+    "he": "התאמה סמנטית חזקה עם כמה בעיות היגיינת ATS."
+  }
+}
+

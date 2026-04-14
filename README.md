@@ -1,0 +1,133 @@
+# Bilingual ATS Resume Analyzer
+
+Local-first candidate-side ATS analyzer for checking ATS hygiene, matching a resume against a target role, running optional company and job-market web research, and producing bilingual Hebrew/English recommendations.
+
+## What it does
+
+- Accepts a PDF resume, a DOCX resume, or both, plus a job description as text or image
+- Extracts structured resume and JD entities
+- Compares the PDF and DOCX versions for consistency when both are available
+- Scores ATS parseability, keyword match, semantic match, leadership alignment, quantified impact, and final ATS fit
+- Adds optional market intelligence about the role and company using server-side web research
+- Supports runtime provider settings for local mode, Gemini, or OpenAI
+- Produces English and Hebrew summaries plus downloadable JSON and Markdown reports
+- Runs locally on Windows without Docker
+
+## Architecture
+
+- `api/`: FastAPI backend and secured analysis endpoint
+- `frontend/`: Streamlit command-center UI with bilingual controls, RTL support, and visual analysis timeline
+- `core/`: Parsing, extraction, scoring, matching, and report generation
+- `providers/`: Swappable OpenAI, Gemini, and local provider interfaces
+- `config/`: Settings, logging, redaction, and request guardrails
+- `tests/`: Unit tests for scoring, security, and report behavior
+- `samples/`: Example JD input and report shape
+
+Reference inspirations used for architecture ideas only:
+
+- [OmkarPathak/pyresparser](https://github.com/OmkarPathak/pyresparser)
+- [raghavendranhp/AI_driven_Applicant_Tracking_System](https://github.com/raghavendranhp/AI_driven_Applicant_Tracking_System)
+
+## Setup
+
+### PowerShell
+
+```powershell
+cd C:\Users\user\Documents\Playground\ats_resume_analyzer
+py -3.10 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+Copy-Item .env.example .env
+```
+
+### CMD
+
+```bat
+cd C:\Users\user\Documents\Playground\ats_resume_analyzer
+py -3.10 -m venv .venv
+.venv\Scripts\activate.bat
+pip install -r requirements.txt
+copy .env.example .env
+```
+
+## Run
+
+### Backend only
+
+```powershell
+cd C:\Users\user\Documents\Playground\ats_resume_analyzer
+.\.venv\Scripts\Activate.ps1
+uvicorn api.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+### Frontend only
+
+```powershell
+cd C:\Users\user\Documents\Playground\ats_resume_analyzer
+.\.venv\Scripts\Activate.ps1
+streamlit run frontend/app.py --server.port 8501
+```
+
+### Helper scripts
+
+```powershell
+.\setup_local.bat
+.\run_local.bat
+```
+
+## Providers and local mode
+
+- Core analysis works offline: parsing, PDF vs DOCX comparison, ATS formatting checks, keyword extraction, and scoring
+- The app now includes a local settings panel in the UI for provider selection, model choice, and server-side API key storage in `.local_settings.json`
+- If `OPENAI_API_KEY` or `GEMINI_API_KEY` is configured and provider analysis is enabled, the backend adds explanation and rewrite suggestions server-side
+- For zero cloud-token use, select `local_llm` in the internal Streamlit settings and run a local OpenAI-compatible model server such as Ollama, LM Studio, or another local server exposed at `/v1/chat/completions`
+- Default local model settings are `LOCAL_LLM_BASE_URL=http://127.0.0.1:11434/v1` and `LOCAL_LLM_MODEL=gemma3:4b`; adjust these to the exact model name served by your local runtime
+- The public web page at `http://localhost:8000` intentionally uses local deterministic analysis only and does not call OpenAI or Gemini
+- Local semantic scoring uses Sentence Transformers by default
+- Optional reranker support can be enabled via `RERANKER_MODEL`
+- OpenAI defaults to `gpt-5.1` with configurable reasoning effort; if your account later exposes a newer official model id, you can enter it directly in settings
+
+## Calibration test cases
+
+Two local job-description files are included for regression checks against the fixed reference resume:
+
+- `samples/test_cases/positive_cv_fit_jd.txt`: a strong-fit engineering/manufacturing/automation leadership role
+- `samples/test_cases/negative_cv_fit_jd.txt`: an intentionally unrelated clinical/regulatory biostatistics role
+
+The public no-API endpoint should clearly separate them: the positive case should score high and the negative case should score low. This helps verify that the analyzer is not simply rewarding every readable resume.
+
+## Web research
+
+- The backend can query the public web to estimate how long a role has been visible, whether it appears reposted or syndicated, and whether the company shows positive, mixed, or watchlist signals
+- This layer is heuristic and internet-dependent; it should be treated as directional candidate intelligence, not as formal due diligence
+- Web research can be disabled from the settings panel
+
+## Secret handling and rotation
+
+- Keep keys only in environment variables, a local `.env`, or the local server-side `.local_settings.json`
+- Never expose provider keys to the Streamlit frontend
+- Logs use redaction and should never print full secret values
+- Rotate a key by replacing its environment variable and restarting the backend
+- If a key is compromised: revoke in the provider console, update `.env`, restart the app, and remove any leaked artifacts from local reports/logs
+
+## Security guardrails
+
+- Upload size limits are enforced server-side
+- File types are validated before parsing
+- FastAPI endpoints are rate limited
+- Outbound provider calls use short timeouts and bounded retries
+- Reports and error responses are sanitized to avoid leaking secrets
+
+## Sample inputs and outputs
+
+- `samples/sample_job_description.txt`
+- `samples/sample_report.md`
+- `samples/sample_report.json`
+
+## Notes
+
+- OCR fallback uses `rapidocr-onnxruntime` when the PDF or JD image lacks selectable text
+- On first semantic analysis run, local embedding models may download from Hugging Face
+- V1 is candidate-side only and intentionally avoids recruiter workflow features
+- The local development target is Python 3.10 using `py -3.10`
+- The OpenAI API model catalog changes over time; use an exact model id that is available on your account

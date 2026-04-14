@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SignalCV | ATS Resume Intelligence</title>
+    <meta
+      name="description"
+      content="Candidate-side ATS resume analysis that helps job seekers pass screening and improve fit without inventing experience."
+    />
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="hero" aria-labelledby="hero-title">
+        <nav class="nav" aria-label="Primary">
+          <div class="brand">
+            <span class="brand-mark"></span>
+            <span>SignalCV</span>
+          </div>
+          <button class="language-pill" id="languageToggle" type="button">עברית</button>
+        </nav>
+
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <p class="eyebrow" data-i18n="eyebrow">Candidate-side ATS intelligence</p>
+            <h1 id="hero-title" data-i18n="headline">Know if your resume can pass the first screen.</h1>
+            <p class="lead" data-i18n="lead">
+              Upload your resume and a job description. We check machine readability, job fit, missing signals, and practical fixes without adding skills you do not have.
+            </p>
+            <a class="primary-link" href="#analyzer" data-i18n="start">Start the check</a>
+          </div>
+          <div class="orb-stage" aria-hidden="true">
+            <div class="orb"></div>
+            <div class="orbit orbit-one"></div>
+            <div class="orbit orbit-two"></div>
+            <div class="scan-card scan-a">Resume parsed</div>
+            <div class="scan-card scan-b">Role signals mapped</div>
+            <div class="scan-card scan-c">ATS risk scored</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="analyzer" class="workspace" aria-labelledby="workspace-title">
+        <div class="section-heading">
+          <p class="eyebrow" data-i18n="workspaceEyebrow">Private by design</p>
+          <h2 id="workspace-title" data-i18n="workspaceTitle">Run a focused resume check</h2>
+          <p data-i18n="workspaceLead">
+            API keys stay server-side. The public screen shows only readiness, results, and recommendations.
+          </p>
+        </div>
+
+        <form id="analysisForm" class="analysis-form">
+          <div class="input-panel">
+            <div class="panel-head">
+              <span class="step">01</span>
+              <h3 data-i18n="resumeTitle">Resume</h3>
+            </div>
+            <label class="drop-zone" for="resumeFile">
+              <input id="resumeFile" name="resumeFile" type="file" accept=".pdf,.docx" />
+              <span data-i18n="resumeUpload">Upload PDF or DOCX resume</span>
+              <small id="resumeFileName">No file selected</small>
+            </label>
+            <label class="field">
+              <span data-i18n="languageLabel">Detected language correction</span>
+              <select id="languageHint">
+                <option value="auto">Auto detect</option>
+                <option value="en">English</option>
+                <option value="he">Hebrew</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="input-panel">
+            <div class="panel-head">
+              <span class="step">02</span>
+              <h3 data-i18n="jdTitle">Job description</h3>
+            </div>
+            <label class="field">
+              <span data-i18n="jdText">Paste job description</span>
+              <textarea id="jdText" rows="8" placeholder="Paste role requirements, responsibilities, and qualifications"></textarea>
+            </label>
+            <div class="split-fields">
+              <label class="field">
+                <span data-i18n="jdUrl">Or add job URL</span>
+                <input id="jdUrl" type="url" placeholder="https://..." />
+              </label>
+              <label class="drop-zone small" for="jdImage">
+                <input id="jdImage" type="file" accept=".png,.jpg,.jpeg" />
+                <span data-i18n="jdImage">Or upload screenshot</span>
+                <small id="jdImageName">Optional</small>
+              </label>
+            </div>
+          </div>
+
+          <div class="action-panel">
+            <button id="precheckButton" class="secondary-button" type="button" data-i18n="precheck">Quick precheck</button>
+            <button id="analyzeButton" class="primary-button" type="submit" data-i18n="analyze">Analyze fit</button>
+          </div>
+        </form>
+
+        <section class="signal-panel" aria-live="polite">
+          <div class="signal-visual" id="signalVisual">
+            <span></span><span></span><span></span><span></span>
+          </div>
+          <div>
+            <p class="eyebrow" data-i18n="status">Status</p>
+            <h3 id="statusTitle" data-i18n="statusIdle">Ready when you are</h3>
+            <p id="statusCopy" data-i18n="statusCopy">Run a short precheck first, then continue to full analysis.</p>
+          </div>
+        </section>
+
+        <section id="results" class="results hidden">
+          <div class="result-topline">
+            <div>
+              <p class="eyebrow" data-i18n="resultEyebrow">Decision summary</p>
+              <h2 id="verdict">-</h2>
+              <p id="summary"></p>
+            </div>
+            <div class="score-ring" id="scoreRing">
+              <span id="scoreValue">0</span>
+              <small>/100</small>
+            </div>
+          </div>
+          <div class="api-status" id="apiStatus"></div>
+          <div class="score-bars" id="scoreBars"></div>
+          <div class="result-columns">
+            <div>
+              <h3 data-i18n="fixes">Recommended fixes</h3>
+              <ul id="recommendations"></ul>
+            </div>
+            <div>
+              <h3 data-i18n="keywords">Missing keywords</h3>
+              <div id="keywords" class="keyword-list"></div>
+              <h3 data-i18n="careers">Adjacent roles to explore</h3>
+              <ul id="careerIdeas"></ul>
+            </div>
+          </div>
+          <div class="export-row">
+            <button id="copyResult" type="button" class="secondary-button" data-i18n="copy">Copy summary</button>
+            <button id="downloadResult" type="button" class="secondary-button" data-i18n="download">Download JSON</button>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="/assets/app.js"></script>
+  </body>
+</html>

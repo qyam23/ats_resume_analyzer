@@ -1,0 +1,17 @@
+Senior Data Operations Manager
+
+We are looking for a senior manager who can lead cross-functional analytics programs, own KPI reporting, and improve operational delivery.
+
+Requirements:
+- Python
+- SQL
+- Power BI
+- Stakeholder management
+- Team leadership
+- Process optimization
+
+Preferred:
+- AWS
+- FastAPI
+- Multilingual communication
+

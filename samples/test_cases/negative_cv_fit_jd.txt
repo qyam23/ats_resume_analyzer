@@ -1,0 +1,19 @@
+Senior Clinical Trial Biostatistician / Regulatory Medical Affairs Specialist
+
+We are hiring a senior clinical research and regulatory affairs expert for pharmaceutical clinical trials, medical writing, and biostatistical submission work.
+
+Responsibilities:
+- Design phase II and phase III clinical trial protocols for oncology and immunology drug development.
+- Perform statistical analysis plans, survival analysis, Kaplan-Meier modeling, SAS programming, R clinical packages, and regulatory data submissions.
+- Prepare FDA, EMA, and ICH-GCP documentation, clinical study reports, medical safety narratives, and pharmacovigilance materials.
+- Lead interactions with medical investigators, CROs, ethics committees, regulatory authorities, and clinical data management teams.
+- Review adverse event coding, MedDRA terminology, CDISC SDTM/ADaM datasets, and trial master file compliance.
+
+Requirements:
+- PhD or MSc in Biostatistics, Epidemiology, Clinical Pharmacology, Medicine, or Life Sciences.
+- 7+ years in clinical trials, pharmaceutical regulatory affairs, medical writing, biostatistics, or pharmacovigilance.
+- Expert SAS programming, R, CDISC, SDTM, ADaM, ICH-GCP, FDA submission standards, and clinical data review.
+- Strong medical terminology, oncology trial design, safety reporting, and regulatory submission experience.
+- Prior ownership of successful NDA, BLA, MAA, or equivalent regulatory submissions.
+
+This role is intentionally unrelated to industrial engineering, manufacturing operations, automation, plant execution, or engineering project leadership.

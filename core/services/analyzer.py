@@ -167,7 +167,8 @@ class ATSAnalyzerService:
                         f"External provider '{self.provider.provider_name()}' did not finish. Continuing with deterministic analysis only.",
                     )
             else:
-                self._mark(timeline, start, "ai-insights", "skipped", "No external provider was enabled, so only local analysis was used.")
+                provider_warning = "AI enhancement provider is unavailable; deterministic ATS analysis completed successfully."
+                self._mark(timeline, start, "ai-insights", "skipped", provider_warning)
             token_usage = apply_cost_estimate(token_usage)
             session_usage = SESSION_USAGE_TRACKER.record(token_usage)
 

@@ -121,6 +121,8 @@ def get_runtime_settings() -> dict:
         "openai_model": "gpt-5.1",
         "openai_reasoning_effort": "high",
         "gemini_model": "gemini-2.5-flash",
+        "hf_model": "Qwen/Qwen2.5-7B-Instruct",
+        "hf_key_masked": "",
         "local_llm_base_url": "http://127.0.0.1:11434/v1",
         "local_llm_model": "gemma3:4b",
         "openai_key_masked": "",
@@ -336,7 +338,7 @@ with middle:
 with right:
     with st.expander(t["settings"], expanded=False):
         with st.form("runtime-settings-form"):
-            provider_options = ["openai", "gemini", "local_llm"]
+            provider_options = ["huggingface", "openai", "gemini", "local_llm"]
             provider = st.selectbox(
                 "Provider",
                 options=provider_options,
@@ -354,9 +356,11 @@ with right:
                 openai_model = st.text_input("Custom OpenAI model id", value=current_model)
             default_reasoning = "high" if "Thinking" in openai_model_preset or openai_model in {"gpt-5.1", "gpt-5.4"} else st.session_state.runtime_settings.get("openai_reasoning_effort", "high")
             openai_reasoning = st.selectbox("OpenAI reasoning effort", options=["low", "medium", "high"], index=["low", "medium", "high"].index(default_reasoning if default_reasoning in {"low", "medium", "high"} else "high"))
+            hf_model = st.text_input("Hugging Face model", value=st.session_state.runtime_settings.get("hf_model", "Qwen/Qwen2.5-7B-Instruct"))
             gemini_model = st.text_input("Gemini model", value=st.session_state.runtime_settings["gemini_model"])
             local_llm_base_url = st.text_input("Local LLM base URL", value=st.session_state.runtime_settings.get("local_llm_base_url", "http://127.0.0.1:11434/v1"))
             local_llm_model = st.text_input("Local LLM model", value=st.session_state.runtime_settings.get("local_llm_model", "gemma3:4b"))
+            hf_key = st.text_input(f"Hugging Face token ({st.session_state.runtime_settings.get('hf_key_masked') or 'not set'})", value="", type="password")
             openai_key = st.text_input(f"OpenAI API key ({st.session_state.runtime_settings['openai_key_masked'] or 'not set'})", value="", type="password")
             gemini_key = st.text_input(f"Gemini API key ({st.session_state.runtime_settings['gemini_key_masked'] or 'not set'})", value="", type="password")
             if st.form_submit_button("Save Settings", use_container_width=True):
@@ -366,6 +370,8 @@ with right:
                         "enable_llm_enhancements": True,
                         "enable_web_research": enable_web_research,
                         "api_only_mode": True,
+                        "hf_api_token": hf_key,
+                        "hf_model": hf_model,
                         "openai_api_key": openai_key,
                         "openai_model": openai_model,
                         "openai_reasoning_effort": openai_reasoning,
@@ -396,6 +402,8 @@ with st.container(border=True):
     cols[1].metric("JD", "Ready" if jd_text.strip() or jd_image else "Missing")
     if st.session_state.runtime_settings["llm_provider"] == "local_llm":
         key_masked = f"local: {st.session_state.runtime_settings.get('local_llm_model', '-')}"
+    elif st.session_state.runtime_settings["llm_provider"] == "huggingface":
+        key_masked = st.session_state.runtime_settings.get("hf_key_masked") or "Missing"
     else:
         key_masked = st.session_state.runtime_settings["openai_key_masked"] if st.session_state.runtime_settings["llm_provider"] == "openai" else st.session_state.runtime_settings["gemini_key_masked"]
     cols[2].metric("Key", key_masked or "Missing")

@@ -30,7 +30,7 @@ jobs:
       - name: Build static mirror
         shell: bash
         env:
-          LIVE_APP_URL: ${{ vars.RENDER_LIVE_URL || 'https://ats-resume-analyzer.onrender.com' }}
+          LIVE_APP_URL: ${{ vars.HF_SPACE_URL || 'https://qyam23-ats-resume-analyzer.hf.space' }}
         run: |
           rm -rf pages_dist
           mkdir -p pages_dist/assets

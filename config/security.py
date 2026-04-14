@@ -27,7 +27,6 @@ async def enforce_upload_size(file: UploadFile) -> bytes:
 
 def sanitized_error(message: str) -> str:
     sanitized = message
-    for token in ["sk-", "AIza", "Bearer "]:
+    for token in ["sk-", "AIza", "hf_", "Bearer "]:
         sanitized = sanitized.replace(token, "[redacted]")
     return sanitized
-

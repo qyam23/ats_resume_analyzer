@@ -7,6 +7,7 @@ import re
 SECRET_PATTERNS = [
     re.compile(r"(sk-[A-Za-z0-9_\-]{8,})"),
     re.compile(r"(AIza[0-9A-Za-z\-_]{12,})"),
+    re.compile(r"(hf_[A-Za-z0-9]{12,})"),
 ]
 
 
@@ -40,4 +41,3 @@ def get_logger(name: str) -> logging.Logger:
     logger.addHandler(handler)
     logger.propagate = False
     return logger
-

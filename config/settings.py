@@ -39,6 +39,8 @@ class Settings(BaseSettings):
     embedding_model: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
     reranker_model: str = ""
     llm_provider: str = "openai"
+    hf_api_token: str = Field(default="", repr=False)
+    hf_model: str = "Qwen/Qwen2.5-7B-Instruct"
     openai_api_key: str = Field(default="", repr=False)
     openai_model: str = "gpt-5.1"
     openai_reasoning_effort: str = "high"

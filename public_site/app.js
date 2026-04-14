@@ -30,7 +30,7 @@ const translations = {
     mirrorCopy: "This page is a static mirror. Resume analysis runs on the live FastAPI service.",
     openLive: "Open live analyzer",
     footerPrivacy: "Uploaded files are processed by the server for the analysis request.",
-    footerKeys: "Provider keys stay server-side and are never sent to the browser.",
+    footerKeys: "AI enhancements can run through Hugging Face. Provider keys stay server-side and are never sent to the browser.",
   },
   he: {
     eyebrow: "מודיעין ATS לצד המועמד",
@@ -63,7 +63,7 @@ const translations = {
     mirrorCopy: "העמוד הזה סטטי. ניתוח קורות החיים רץ בשירות FastAPI החי.",
     openLive: "פתח את המנתח החי",
     footerPrivacy: "קבצים שמועלים מעובדים בצד השרת עבור בקשת הניתוח.",
-    footerKeys: "מפתחות provider נשארים בצד השרת ולא נשלחים לדפדפן.",
+    footerKeys: "תוספות AI יכולות לרוץ דרך Hugging Face. מפתחות provider נשארים בצד השרת ולא נשלחים לדפדפן.",
   },
 };
 
@@ -156,7 +156,7 @@ async function postForm(url) {
 
 function configureStaticMirror() {
   if (!isStaticMirror) return;
-  const liveUrl = runtimeConfig.LIVE_APP_URL || "https://ats-resume-analyzer.onrender.com";
+  const liveUrl = runtimeConfig.LIVE_APP_URL || "https://qyam23-ats-resume-analyzer.hf.space";
   pagesMirror.classList.remove("hidden");
   liveAppLink.href = liveUrl;
   precheckButton.disabled = true;

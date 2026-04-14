@@ -1,3 +1,12 @@
+---
+title: ATS Resume Analyzer
+emoji: 🧭
+colorFrom: teal
+colorTo: green
+sdk: docker
+app_port: 7860
+---
+
 # Bilingual ATS Resume Analyzer
 
 Local-first candidate-side ATS analyzer for checking ATS hygiene, matching a resume against a target role, running optional company and job-market web research, and producing bilingual Hebrew/English recommendations.
@@ -9,7 +18,7 @@ Local-first candidate-side ATS analyzer for checking ATS hygiene, matching a res
 - Compares the PDF and DOCX versions for consistency when both are available
 - Scores ATS parseability, keyword match, semantic match, leadership alignment, quantified impact, and final ATS fit
 - Adds optional market intelligence about the role and company using server-side web research
-- Supports runtime provider settings for local mode, Gemini, or OpenAI
+- Supports Hugging Face Inference Providers for production AI enhancements, plus OpenAI, Gemini, and local providers for internal use
 - Produces English and Hebrew summaries plus downloadable JSON and Markdown reports
 - Runs locally on Windows without Docker
 
@@ -19,12 +28,13 @@ Local-first candidate-side ATS analyzer for checking ATS hygiene, matching a res
 - `public_site/`: production public web UI served by FastAPI from `/`
 - `frontend/`: Streamlit command-center UI for local/internal use only
 - `core/`: Parsing, extraction, scoring, matching, and report generation
-- `providers/`: Swappable OpenAI, Gemini, and local provider interfaces
+- `providers/`: Swappable Hugging Face, OpenAI, Gemini, and local provider interfaces
 - `config/`: Settings, logging, redaction, and request guardrails
 - `tests/`: Unit tests for scoring, security, and report behavior
 - `samples/`: Example JD input and report shape
-- `render.yaml`: Render Web Service blueprint
+- `Dockerfile`: Hugging Face Docker Space runtime
 - `.github/workflows/pages.yml`: optional GitHub Pages static mirror workflow
+- `.github/workflows/ci.yml`: tests and Docker build validation
 
 Reference inspirations used for architecture ideas only:
 
@@ -84,50 +94,60 @@ streamlit run frontend/app.py --server.port 8501
 
 ## Public production architecture
 
-- Render runs one Python Web Service using FastAPI only
-- `public_site` is served from the same Render domain at `/`
+- Hugging Face Docker Spaces runs one FastAPI container
+- `public_site` is served from the same Hugging Face Space domain at `/`
 - Public API calls are same-origin under `/public/precheck` and `/public/analyze`
-- OpenAI and Gemini keys stay server-side in Render environment variables
+- Hugging Face Inference Providers are the default managed AI enhancement layer
+- `HF_API_TOKEN` stays server-side as a Hugging Face Space secret
 - Internal endpoints (`/settings`, `/preflight`, `/analyze`) are disabled in production when `ENABLE_INTERNAL_ENDPOINTS=false`
 - Streamlit remains available for local diagnostics and private workflows only
 
-## Render deployment
+## Hugging Face Spaces deployment
 
-The repository includes `render.yaml` for a Render Blueprint.
+Create a Hugging Face Docker Space and connect or upload this repository. Do not choose Gradio; this project already serves a custom FastAPI app and static `public_site`.
 
-Build command:
-
-```bash
-pip install -r requirements.txt
-```
-
-Start command:
+Docker runtime:
 
 ```bash
 python launch.py
 ```
 
-The launcher binds to `0.0.0.0` when `APP_ENV=production` and reads the port from Render's `PORT` environment variable, falling back to `8000` locally.
+The Dockerfile exposes port `7860`. The launcher binds to `0.0.0.0` when `APP_ENV=production` and reads the port from `PORT`, falling back to `7860` in Docker and `8000` locally.
 
-Required or recommended Render environment variables:
+Recommended Space secrets and variables:
 
 - `APP_ENV=production`
-- `PYTHON_VERSION=3.10.13`
-- `PORT` is provided by Render
-- `LLM_PROVIDER=openai` or `gemini`
-- `OPENAI_API_KEY` set as a secret if OpenAI enhancements are enabled
-- `GEMINI_API_KEY` set as a secret if Gemini enhancements are enabled
-- `ENABLE_LLM_ENHANCEMENTS=false` for deterministic public mode, or `true` for provider-enhanced analysis
+- `PORT=7860`
+- `LLM_PROVIDER=huggingface`
+- `HF_API_TOKEN=<your Hugging Face token>`
+- `HF_MODEL=Qwen/Qwen2.5-7B-Instruct`
+- `ENABLE_LLM_ENHANCEMENTS=true`
 - `ENABLE_WEB_RESEARCH=true`
 - `ENABLE_INTERNAL_ENDPOINTS=false`
 - `API_ONLY_MODE=true`
-- `ALLOWED_ORIGINS=https://ats-resume-analyzer.onrender.com`
+- `ALLOWED_ORIGINS=https://qyam23-ats-resume-analyzer.hf.space`
 
-Health check path:
+If `HF_API_TOKEN` is missing, rate-limited, or the provider times out, the ATS engine still completes the deterministic analysis and skips AI rewrite commentary.
+
+Expected public URL after creating the Space:
+
+```text
+https://qyam23-ats-resume-analyzer.hf.space
+```
+
+Health check:
 
 ```text
 /health
 ```
+
+## AI modes
+
+- Deterministic mode runs parsing, ATS checks, consistency, matching, scoring, and recommendations without an LLM
+- AI-enhanced mode keeps deterministic scoring as the source of truth and uses Hugging Face only for commentary and rewrite guidance
+- GitHub Models are not used as the production inference backend
+- OpenAI, Gemini, and local model providers remain available for local/internal experimentation, but Hugging Face is the production default
+
 
 ## GitHub Pages mirror
 
@@ -139,20 +159,20 @@ Workflow file:
 .github/workflows/pages.yml
 ```
 
-Set this repository variable if the final Render URL differs from the default:
+Set this repository variable if the final Hugging Face Space URL differs from the default:
 
 ```text
-RENDER_LIVE_URL=https://your-render-service.onrender.com
+HF_SPACE_URL=https://your-space-name.hf.space
 ```
 
 ## Providers and local mode
 
 - Core analysis works offline: parsing, PDF vs DOCX comparison, ATS formatting checks, keyword extraction, and scoring
 - The app now includes a local settings panel in the UI for provider selection, model choice, and server-side API key storage in `.local_settings.json`
-- If `OPENAI_API_KEY` or `GEMINI_API_KEY` is configured and provider analysis is enabled, the backend adds explanation and rewrite suggestions server-side
+- If `HF_API_TOKEN` is configured and provider analysis is enabled, the backend adds explanation and rewrite suggestions server-side through Hugging Face
 - For zero cloud-token use, select `local_llm` in the internal Streamlit settings and run a local OpenAI-compatible model server such as Ollama, LM Studio, or another local server exposed at `/v1/chat/completions`
 - Default local model settings are `LOCAL_LLM_BASE_URL=http://127.0.0.1:11434/v1` and `LOCAL_LLM_MODEL=gemma3:4b`; adjust these to the exact model name served by your local runtime
-- The public web page at `http://localhost:8000` intentionally uses local deterministic analysis only and does not call OpenAI or Gemini
+- The public web page at `http://localhost:8000` uses deterministic analysis first and optionally adds Hugging Face commentary when configured
 - Local semantic scoring uses Sentence Transformers by default
 - Optional reranker support can be enabled via `RERANKER_MODEL`
 - OpenAI defaults to `gpt-5.1` with configurable reasoning effort; if your account later exposes a newer official model id, you can enter it directly in settings

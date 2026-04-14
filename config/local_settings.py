@@ -12,6 +12,8 @@ class LocalSettingsPayload(BaseModel):
     enable_llm_enhancements: bool = True
     enable_web_research: bool = True
     api_only_mode: bool = True
+    hf_api_token: str = Field(default="", repr=False)
+    hf_model: str = "Qwen/Qwen2.5-7B-Instruct"
     openai_api_key: str = Field(default="", repr=False)
     openai_model: str = "gpt-5.1"
     openai_reasoning_effort: str = "high"

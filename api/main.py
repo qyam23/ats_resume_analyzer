@@ -63,6 +63,8 @@ def _active_model_name() -> str:
         return current.openai_model
     if current.llm_provider == "gemini":
         return current.gemini_model
+    if current.llm_provider == "huggingface":
+        return current.hf_model
     if current.llm_provider == "local_llm":
         return current.local_llm_model
     return "local-rules"
@@ -157,6 +159,14 @@ def _public_result_payload(result: object) -> dict[str, object]:
     primary_resume = diagnostics.get("docx_structured") or diagnostics.get("pdf_structured") or {}
     job_description = diagnostics.get("job_description", {})
     final_score = float(scores.get("final_ats_score", 0) or 0)
+    provider_warning = diagnostics.get("provider_warning", "")
+    analysis_mode = (
+        "local_no_api"
+        if provider_warning.startswith("Public mode uses local")
+        else "ai_enhancement_skipped"
+        if provider_warning
+        else "provider_enhanced"
+    )
     if final_score >= 78:
         verdict = "Strong fit"
     elif final_score >= 62:
@@ -177,9 +187,9 @@ def _public_result_payload(result: object) -> dict[str, object]:
         "recommendations": (recommendations.get("english") or [])[:6],
         "hebrew_recommendations": (recommendations.get("hebrew") or [])[:6],
         "career_suggestions": _career_suggestions(primary_resume, job_description),
-        "ai_status": "skipped" if diagnostics.get("provider_warning") else "completed",
-        "ai_note": diagnostics.get("provider_warning", ""),
-        "analysis_mode": "local_no_api" if diagnostics.get("provider_warning", "").startswith("Public mode uses local") else "provider_enhanced",
+        "ai_status": "skipped" if provider_warning else "completed",
+        "ai_note": provider_warning,
+        "analysis_mode": analysis_mode,
         "token_usage": {
             "provider": data.get("token_usage", {}).get("provider", ""),
             "model": data.get("token_usage", {}).get("model", ""),
@@ -331,7 +341,7 @@ async def public_analyze(
             jd_text=combined_jd,
             jd_image=jd_image_bytes,
             public_mode=True,
-            use_provider_insights=False,
+            use_provider_insights=get_settings().enable_llm_enhancements,
         )
         payload = _public_result_payload(result)
         if url_warning:
@@ -354,6 +364,8 @@ def run_preflight(payload: PreflightRequest) -> dict[str, object]:
         if current.llm_provider == "openai"
         else current.gemini_model
         if current.llm_provider == "gemini"
+        else current.hf_model
+        if current.llm_provider == "huggingface"
         else current.local_llm_model
     )
 
@@ -372,16 +384,18 @@ def run_preflight(payload: PreflightRequest) -> dict[str, object]:
         if current.llm_provider == "openai"
         else bool(current.gemini_api_key)
         if current.llm_provider == "gemini"
+        else bool(current.hf_api_token)
+        if current.llm_provider == "huggingface"
         else True
     )
     checks.append(
         PreflightCheck(
             key="api_key",
-            label="API key" if current.llm_provider in {"openai", "gemini"} else "Local model",
+            label="API key" if current.llm_provider in {"openai", "gemini", "huggingface"} else "Local model",
             status="ok" if key_present else "error",
             detail=(
                 f"{current.llm_provider.title()} API key {'is present' if key_present else 'is missing'}."
-                if current.llm_provider in {"openai", "gemini"}
+                if current.llm_provider in {"openai", "gemini", "huggingface"}
                 else "No cloud API key is required for local LLM mode."
             ),
         )

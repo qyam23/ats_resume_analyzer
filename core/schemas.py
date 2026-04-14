@@ -103,11 +103,13 @@ class RuntimeSettingsSummary(BaseModel):
     enable_llm_enhancements: bool = True
     enable_web_research: bool = True
     api_only_mode: bool = True
+    hf_model: str = "Qwen/Qwen2.5-7B-Instruct"
     openai_model: str = "gpt-5.1"
     openai_reasoning_effort: str = "high"
     gemini_model: str = "gemini-2.5-flash"
     local_llm_base_url: str = ""
     local_llm_model: str = "gemma3:4b"
+    hf_key_masked: str = ""
     openai_key_masked: str = ""
     gemini_key_masked: str = ""
     default_resume_he_path: str = ""

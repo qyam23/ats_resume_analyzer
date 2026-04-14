@@ -16,11 +16,13 @@ class SettingsService:
             enable_llm_enhancements=settings.enable_llm_enhancements,
             enable_web_research=settings.enable_web_research,
             api_only_mode=settings.api_only_mode,
+            hf_model=settings.hf_model,
             openai_model=settings.openai_model,
             openai_reasoning_effort=settings.openai_reasoning_effort,
             gemini_model=settings.gemini_model,
             local_llm_base_url=settings.local_llm_base_url,
             local_llm_model=settings.local_llm_model,
+            hf_key_masked=mask_secret(settings.hf_api_token),
             openai_key_masked=mask_secret(settings.openai_api_key),
             gemini_key_masked=mask_secret(settings.gemini_api_key),
             default_resume_he_path=settings.default_resume_he_path,
@@ -33,6 +35,8 @@ class SettingsService:
         settings = get_settings()
         merged = payload.model_copy(
             update={
+                "hf_api_token": payload.hf_api_token or settings.hf_api_token,
+                "hf_model": payload.hf_model or settings.hf_model,
                 "openai_api_key": payload.openai_api_key or settings.openai_api_key,
                 "gemini_api_key": payload.gemini_api_key or settings.gemini_api_key,
                 "local_llm_base_url": payload.local_llm_base_url or settings.local_llm_base_url,

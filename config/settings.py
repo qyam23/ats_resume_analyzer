@@ -81,7 +81,7 @@ class Settings(BaseSettings):
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
     settings = Settings()
-    overrides = read_local_settings(settings.local_settings_path)
+    overrides = read_local_settings(settings.local_settings_path) if settings.is_local_runtime else {}
     if overrides:
         settings = settings.model_copy(update=overrides)
     settings.reports_dir.mkdir(parents=True, exist_ok=True)

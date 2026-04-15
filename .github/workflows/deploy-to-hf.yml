@@ -29,6 +29,7 @@ jobs:
 
       - name: Sync repository files to Hugging Face Space
         run: |
+          rm -f hf_space/.local_settings.json hf_space/.env
           rsync -av --delete \
             --exclude ".git" \
             --exclude ".github" \

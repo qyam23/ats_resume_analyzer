@@ -36,6 +36,8 @@ class Settings(BaseSettings):
     enable_internal_endpoints: bool = True
     api_only_mode: bool = True
     premium_test_unlocked: bool = False
+    dev_full_access: bool = False
+    dev_mode: bool = False
     site_auth_enabled: bool = False
     site_password: str = Field(default="", repr=False)
     site_auth_secret: str = Field(default="", repr=False)
@@ -66,6 +68,14 @@ class Settings(BaseSettings):
     @property
     def cors_origins(self) -> list[str]:
         return [origin.strip() for origin in self.allowed_origins.split(",") if origin.strip()]
+
+    @property
+    def is_local_runtime(self) -> bool:
+        return self.app_env.lower() in {"local", "development", "dev", "test"}
+
+    @property
+    def effective_dev_full_access(self) -> bool:
+        return self.is_local_runtime and bool(self.dev_full_access or self.dev_mode)
 
 
 @lru_cache(maxsize=1)

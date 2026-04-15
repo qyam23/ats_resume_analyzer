@@ -152,9 +152,19 @@ const exportWorkspace = document.getElementById("exportWorkspace");
 const exportStatus = document.getElementById("exportStatus");
 const comparisonPanel = document.getElementById("comparisonPanel");
 const comparisonSummary = document.getElementById("comparisonSummary");
+const devBanner = document.getElementById("devBanner");
+const devPanel = document.getElementById("devPanel");
+const devPanelToggle = document.getElementById("devPanelToggle");
+const devForcePremium = document.getElementById("devForcePremium");
+const devShowDebug = document.getElementById("devShowDebug");
+const devModeStatus = document.getElementById("devModeStatus");
+const devPremiumStatus = document.getElementById("devPremiumStatus");
+const devAiStatus = document.getElementById("devAiStatus");
+const devDebugOutput = document.getElementById("devDebugOutput");
 
 let currentLanguage = "en";
 let lastResult = null;
+let baseResult = null;
 let previousResult = null;
 let lastPremiumOrder = JSON.parse(sessionStorage.getItem("atsPremiumOrder") || "null");
 let selectedPackage = "resume_job_plan";
@@ -164,6 +174,13 @@ let transformationState = {
   impactEstimates: [],
   premiumUnlocked: false,
   view: "side",
+};
+let devState = {
+  enabled: false,
+  forcePremium: sessionStorage.getItem("atsDevForcePremium") !== "false",
+  showDebug: sessionStorage.getItem("atsDevShowDebug") === "true",
+  simulation: sessionStorage.getItem("atsDevSimulation") || "",
+  localAiStatus: "unknown",
 };
 
 const premiumPackages = [
@@ -222,6 +239,80 @@ function setStage(stage) {
   });
 }
 
+function clonePlain(value) {
+  return JSON.parse(JSON.stringify(value || {}));
+}
+
+function setNestedScore(payload, key, value) {
+  payload.scores = payload.scores || {};
+  payload.scores[key] = value;
+}
+
+function applyDevSimulationClient(payload) {
+  if (!payload || !devState.enabled || !devState.simulation) return payload;
+  const simulated = clonePlain(payload);
+  simulated.debug = simulated.debug || {};
+  simulated.debug.client_dev_simulation = devState.simulation;
+  if (devState.simulation === "weak" || devState.simulation === "low_visibility") {
+    simulated.decision = "LOW VISIBILITY / LOW PRIORITY";
+    simulated.verdict = devState.simulation === "low_visibility" ? "Low visibility simulation" : "Weak fit simulation";
+    simulated.final_ats_score = devState.simulation === "low_visibility" ? Math.min(Number(simulated.final_ats_score || 45), 44) : 32;
+    simulated.visibility_score = 18;
+    simulated.recruiter_match_score = 16;
+    simulated.summary = "DEV simulation: low recruiter visibility, weak title alignment, and missing must-have signals.";
+    setNestedScore(simulated, "keyword_match_score", 12);
+    setNestedScore(simulated, "semantic_match_score", 28);
+    setNestedScore(simulated, "leadership_alignment_score", 18);
+    simulated.why_not_found = ["Low recruiter search coverage.", "Weak title alignment.", "Missing must-have role vocabulary."];
+    simulated.top_fixes = [
+      "Add exact role-title language where truthful.",
+      "Move must-have keywords into the summary and first experience block.",
+      "Strengthen ownership, delivery, and measurable impact signals.",
+    ];
+  } else if (devState.simulation === "strong") {
+    simulated.decision = "APPLY";
+    simulated.verdict = "Strong fit simulation";
+    simulated.final_ats_score = 88;
+    simulated.visibility_score = 84;
+    simulated.recruiter_match_score = 82;
+    simulated.summary = "DEV simulation: strong recruiter visibility and role alignment.";
+    setNestedScore(simulated, "keyword_match_score", 86);
+    setNestedScore(simulated, "semantic_match_score", 88);
+    setNestedScore(simulated, "leadership_alignment_score", 82);
+    simulated.why_not_found = [];
+    simulated.top_fixes = ["Keep the current role-aligned headline.", "Protect the keyword density in the first third of the resume.", "Apply with the optimized version."];
+  } else if (devState.simulation === "missing_keywords") {
+    const extra = ["ownership", "technical leadership", "delivery roadmap", "stakeholder management", "cross-functional execution"];
+    simulated.missing_keywords = [...extra, ...(simulated.missing_keywords || [])].slice(0, 12);
+    simulated.missing_signals = simulated.missing_signals || {};
+    simulated.missing_signals.keywords = [...extra, ...((simulated.missing_signals && simulated.missing_signals.keywords) || [])].slice(0, 12);
+    simulated.top_fixes = ["DEV simulation: add missing recruiter-search terms where accurate.", ...(simulated.top_fixes || []).slice(0, 4)];
+  }
+  return simulated;
+}
+
+function updateDevPanel() {
+  if (!devPanel || !devBanner) return;
+  devPanel.classList.toggle("hidden", !devState.enabled);
+  devBanner.classList.toggle("hidden", !devState.enabled);
+  if (devForcePremium) devForcePremium.checked = devState.forcePremium;
+  if (devShowDebug) devShowDebug.checked = devState.showDebug;
+  devModeStatus.textContent = devState.enabled ? "DEV / local-only" : "Normal mode";
+  devPremiumStatus.textContent = `Premium: ${premiumIsUnlocked() ? "forced/unlocked" : "locked"}`;
+  devAiStatus.textContent = `Local AI: ${devState.localAiStatus}`;
+  document.querySelectorAll("[data-dev-sim]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.devSim === devState.simulation);
+  });
+  renderDevDebug();
+}
+
+function renderDevDebug() {
+  if (!devDebugOutput) return;
+  const visible = Boolean(devState.enabled && devState.showDebug && lastResult && lastResult.debug);
+  devDebugOutput.classList.toggle("hidden", !visible);
+  devDebugOutput.textContent = visible ? JSON.stringify(lastResult.debug, null, 2) : "";
+}
+
 async function refreshAuth() {
   if (isStaticMirror) return;
   const response = await fetch(`${apiBaseUrl}/auth/status`, { credentials: "same-origin" });
@@ -238,19 +329,25 @@ async function refreshRuntimeStatus() {
     const response = await fetch(`${apiBaseUrl}/public/runtime-status`, { credentials: "same-origin" });
     if (!response.ok) return;
     const payload = await response.json();
+    devState.enabled = Boolean(payload.dev_mode || payload.dev_full_access);
+    devState.localAiStatus = payload.provider_available ? "connected" : "not reachable";
     runtimeStrip.innerHTML = `
       <span>${currentLanguage === "he" ? "סביבה" : "Runtime"}: ${payload.runtime || "local"}</span>
       <span>${currentLanguage === "he" ? "ליבה" : "Core"}: ${payload.deterministic_core || "ready"}</span>
       <span class="${payload.provider_available ? "chip-ok" : "chip-warn"}">${currentLanguage === "he" ? "AI מקומי" : "Local AI"}: ${payload.provider_available ? (currentLanguage === "he" ? "מחובר" : "connected") : (currentLanguage === "he" ? "לא זמין" : "not reachable")}</span>
       <span>${currentLanguage === "he" ? "מודל" : "Model"}: ${payload.model || "local"}</span>
+      ${devState.enabled ? '<span class="chip-dev">DEV full access</span>' : ""}
     `;
+    updateDevPanel();
   } catch (_) {
+    devState.localAiStatus = "not checked";
     runtimeStrip.innerHTML = `
       <span>${currentLanguage === "he" ? "סביבה: לוקאלית" : "Runtime: local"}</span>
       <span>${currentLanguage === "he" ? "ליבה: מוכנה" : "Core: ready"}</span>
       <span class="chip-warn">${currentLanguage === "he" ? "AI מקומי: לא נבדק" : "Local AI: not checked"}</span>
       <span>${currentLanguage === "he" ? "אין סודות בדפדפן" : "No browser-side secrets"}</span>
     `;
+    updateDevPanel();
   }
 }
 
@@ -263,6 +360,7 @@ function buildFormData() {
   if (jdText.value.trim()) data.append("jd_text", jdText.value.trim());
   if (jdUrl.value.trim()) data.append("jd_url", jdUrl.value.trim());
   if (jdImage.files[0]) data.append("jd_image", jdImage.files[0]);
+  if (devState.enabled && devState.simulation) data.append("dev_force", devState.simulation);
   return data;
 }
 
@@ -337,6 +435,7 @@ function openCheckout() {
 }
 
 function premiumIsUnlocked() {
+  if (devState.enabled && devState.forcePremium) return true;
   return Boolean(lastPremiumOrder && lastPremiumOrder.premium_unlocked);
 }
 
@@ -885,7 +984,12 @@ function renderComparison() {
 }
 
 function renderResult(payload) {
+  if (payload && !payload.__devRendered) {
+    baseResult = clonePlain(payload);
+  }
+  payload = applyDevSimulationClient(payload);
   payload = applyPremiumUnlockToResult(payload);
+  if (payload) payload.__devRendered = true;
   lastResult = payload;
   transformationState = {
     selectedFixes: new Set(),
@@ -923,6 +1027,7 @@ function renderResult(payload) {
   updatePremiumUi();
   renderComparison();
   renderList("careerIdeas", firstItems(payload.career_suggestions, ["Engineering Manager", "Head of Engineering Operations", "Technical Operations Manager"], 5), "Career suggestions will appear after analysis.");
+  updateDevPanel();
   results.classList.remove("hidden");
   results.scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -996,6 +1101,68 @@ afterOnlyView.addEventListener("click", () => {
 
 document.querySelectorAll("[data-open-checkout]").forEach((button) => {
   button.addEventListener("click", openCheckout);
+});
+
+if (devPanelToggle) {
+  devPanelToggle.addEventListener("click", () => {
+    devPanel.classList.toggle("collapsed");
+  });
+}
+
+if (devForcePremium) {
+  devForcePremium.addEventListener("change", () => {
+    devState.forcePremium = devForcePremium.checked;
+    sessionStorage.setItem("atsDevForcePremium", String(devState.forcePremium));
+    if (baseResult) renderResult(clonePlain(baseResult));
+    updatePremiumUi();
+    updateDevPanel();
+  });
+}
+
+if (devShowDebug) {
+  devShowDebug.addEventListener("change", () => {
+    devState.showDebug = devShowDebug.checked;
+    sessionStorage.setItem("atsDevShowDebug", String(devState.showDebug));
+    updateDevPanel();
+  });
+}
+
+document.querySelectorAll("[data-dev-sim]").forEach((button) => {
+  button.addEventListener("click", () => {
+    devState.simulation = button.dataset.devSim || "";
+    sessionStorage.setItem("atsDevSimulation", devState.simulation);
+    if (baseResult) renderResult(clonePlain(baseResult));
+    updateDevPanel();
+  });
+});
+
+document.getElementById("devRerun")?.addEventListener("click", () => {
+  if (lastResult) setStatus("Developer re-run", "Running analysis again with the current dev flags.", "loading");
+  form.requestSubmit();
+});
+
+document.getElementById("devResetState")?.addEventListener("click", () => {
+  lastResult = null;
+  baseResult = null;
+  previousResult = null;
+  transformationState.selectedFixes = new Set();
+  results.classList.add("hidden");
+  comparisonPanel.classList.add("hidden");
+  setStatus("State reset", "Developer state was cleared. Inputs remain available.", "idle");
+  updateDevPanel();
+});
+
+document.getElementById("devClearSession")?.addEventListener("click", () => {
+  sessionStorage.removeItem("atsPremiumOrder");
+  lastPremiumOrder = null;
+  if (!devState.enabled) {
+    sessionStorage.removeItem("atsDevForcePremium");
+    sessionStorage.removeItem("atsDevShowDebug");
+    sessionStorage.removeItem("atsDevSimulation");
+  }
+  setStatus("Session cleared", "Premium session state was cleared. Dev access still follows the server flag.", "idle");
+  if (baseResult) renderResult(clonePlain(baseResult));
+  updateDevPanel();
 });
 
 checkoutForm.addEventListener("submit", async (event) => {

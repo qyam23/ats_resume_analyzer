@@ -15,11 +15,14 @@ SESSION_MAX_AGE_SECONDS = 60 * 60 * 12
 
 
 def auth_is_enabled() -> bool:
-    return bool(get_settings().site_auth_enabled)
+    settings = get_settings()
+    if getattr(settings, "effective_dev_full_access", False):
+        return False
+    return bool(settings.site_auth_enabled)
 
 
 def require_site_auth(request: Request) -> None:
-    if not auth_is_enabled():
+    if getattr(get_settings(), "effective_dev_full_access", False) or not auth_is_enabled():
         return
     settings = get_settings()
     if not settings.site_password:

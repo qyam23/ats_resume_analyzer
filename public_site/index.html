@@ -366,6 +366,42 @@
       </footer>
     </main>
 
+    <div id="devBanner" class="dev-banner hidden" role="status">DEV MODE — Full Access Enabled</div>
+    <aside id="devPanel" class="dev-panel hidden collapsed" aria-label="Developer full access panel">
+      <button id="devPanelToggle" class="dev-panel-toggle" type="button">Dev</button>
+      <div class="dev-panel-body">
+        <div class="dev-panel-head">
+          <strong>Developer Full Access</strong>
+          <small id="devModeStatus">Normal mode</small>
+        </div>
+        <label class="dev-switch">
+          <input id="devForcePremium" type="checkbox" checked />
+          <span>Force Premium</span>
+        </label>
+        <label class="dev-switch">
+          <input id="devShowDebug" type="checkbox" />
+          <span>Show Debug Info</span>
+        </label>
+        <div class="dev-sim-grid" aria-label="Fit simulation">
+          <button type="button" data-dev-sim="">Normal</button>
+          <button type="button" data-dev-sim="weak">Weak Fit</button>
+          <button type="button" data-dev-sim="strong">Strong Fit</button>
+          <button type="button" data-dev-sim="low_visibility">Low Visibility</button>
+          <button type="button" data-dev-sim="missing_keywords">Missing Keywords</button>
+        </div>
+        <div class="dev-actions">
+          <button id="devRerun" type="button">Re-run analysis</button>
+          <button id="devResetState" type="button">Reset state</button>
+          <button id="devClearSession" type="button">Clear session</button>
+        </div>
+        <div class="dev-status">
+          <span id="devPremiumStatus">Premium: normal</span>
+          <span id="devAiStatus">Local AI: unknown</span>
+        </div>
+        <pre id="devDebugOutput" class="dev-debug hidden"></pre>
+      </div>
+    </aside>
+
     <script src="assets/site-config.js"></script>
     <script src="assets/app.js"></script>
   </body>

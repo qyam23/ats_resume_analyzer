@@ -115,19 +115,26 @@ def health() -> dict[str, object]:
         "api_only_mode": current.api_only_mode,
         "site_auth_enabled": current.site_auth_enabled,
         "ocr_enabled": current.enable_ocr,
+        "dev_mode": current.effective_dev_full_access,
     }
 
 
 @app.get("/auth/status")
 def auth_status(request: Request) -> dict[str, object]:
+    current = get_settings()
     if not auth_is_enabled():
-        return {"auth_enabled": False, "authenticated": True}
+        return {
+            "auth_enabled": False,
+            "authenticated": True,
+            "dev_mode": current.effective_dev_full_access,
+            "auth_bypassed": current.effective_dev_full_access,
+        }
     try:
         require_site_auth(request)
         authenticated = True
     except HTTPException:
         authenticated = False
-    return {"auth_enabled": True, "authenticated": authenticated}
+    return {"auth_enabled": True, "authenticated": authenticated, "dev_mode": current.effective_dev_full_access, "auth_bypassed": False}
 
 
 @app.post("/auth/login")
@@ -205,6 +212,7 @@ def _extract_text_from_url(url: str) -> tuple[str, str]:
 
 
 def _public_result_payload(result: object) -> dict[str, object]:
+    current = get_settings()
     data = result.model_dump()
     diagnostics = data.get("detailed_diagnostics", {})
     scores = data.get("scores", {})
@@ -222,7 +230,7 @@ def _public_result_payload(result: object) -> dict[str, object]:
         missing_keywords=missing_keywords,
         visibility_profile=visibility,
         final_score=final_score,
-        premium_unlocked=get_settings().premium_test_unlocked,
+        premium_unlocked=current.effective_dev_full_access or current.premium_test_unlocked,
     )
     provider_warning = diagnostics.get("provider_warning", "")
     provider_note = diagnostics.get("provider_note", "")
@@ -245,7 +253,7 @@ def _public_result_payload(result: object) -> dict[str, object]:
     else:
         verdict = "Low ATS pass likelihood"
         decision = "LOW VISIBILITY / LOW PRIORITY"
-    return {
+    payload = {
         "decision": decision,
         "verdict": verdict,
         "final_ats_score": final_score,
@@ -295,6 +303,116 @@ def _public_result_payload(result: object) -> dict[str, object]:
         },
         "company_research": data.get("company_research", {}),
     }
+    if current.effective_dev_full_access:
+        payload["dev_mode"] = True
+        payload["debug"] = _dev_debug_payload(scores, diagnostics, visibility)
+    return payload
+
+
+def _dev_debug_payload(scores: dict[str, object], diagnostics: dict[str, object], visibility: dict[str, object]) -> dict[str, object]:
+    keyword_score = float(scores.get("keyword_match_score", 0) or 0)
+    semantic_score = float(scores.get("semantic_match_score", 0) or 0)
+    title_score = float(visibility.get("title_alignment_score", 0) or visibility.get("compatibility_scores", {}).get("title_alignment", 0) or 0)
+    final_score = float(scores.get("final_ats_score", 0) or 0)
+    missing_keywords = diagnostics.get("missing_keywords", [])
+    penalties: list[str] = []
+    boosts: list[str] = []
+    if keyword_score < 35:
+        penalties.append("Keyword coverage is below the recommended threshold.")
+    if semantic_score < 45:
+        penalties.append("Semantic match is weak for this job description.")
+    if title_score < 40:
+        penalties.append("Title alignment is weak or unclear.")
+    if missing_keywords:
+        penalties.append(f"{min(len(missing_keywords), 99)} missing recruiter/ATS keyword signals were detected.")
+    if float(scores.get("parseability_score", 0) or 0) >= 85:
+        boosts.append("Resume parseability is strong.")
+    if float(scores.get("quantified_impact_score", 0) or 0) >= 70:
+        boosts.append("Quantified impact signals are visible.")
+    if float(scores.get("leadership_alignment_score", 0) or 0) >= 70:
+        boosts.append("Leadership alignment is strong.")
+    return {
+        "scoring_breakdown": scores,
+        "applied_weights": {
+            "parseability_score": 0.20,
+            "consistency_score": 0.15,
+            "keyword_match_score": 0.20,
+            "semantic_match_score": 0.20,
+            "leadership_alignment_score": 0.10,
+            "quantified_impact_score": 0.05,
+            "title_alignment_score": 0.10,
+        },
+        "matching_signals": {
+            "keyword_score": keyword_score,
+            "semantic_score": semantic_score,
+            "title_match_score": title_score,
+            "final_ats_score": final_score,
+            "missing_keywords": missing_keywords[:25],
+            "why_not_found": visibility.get("why_not_found", []),
+            "top_fixes": visibility.get("top_fixes", []),
+            "what_ats_sees": visibility.get("what_ats_sees", []),
+            "what_recruiter_sees": visibility.get("what_recruiter_sees", []),
+        },
+        "penalties": penalties,
+        "boosts": boosts,
+    }
+
+
+def _apply_dev_simulation(payload: dict[str, object], mode: str) -> dict[str, object]:
+    mode = (mode or "").strip().lower()
+    if not mode:
+        return payload
+    simulated = dict(payload)
+    debug = dict(simulated.get("debug") or {})
+    debug["dev_simulation"] = mode
+    simulated["debug"] = debug
+    scores = dict(simulated.get("scores") or {})
+    if mode in {"weak", "weak_fit", "low_visibility"}:
+        simulated["decision"] = "LOW VISIBILITY / LOW PRIORITY"
+        simulated["verdict"] = "Weak fit simulation"
+        simulated["final_ats_score"] = 32.0 if mode != "low_visibility" else min(float(simulated.get("final_ats_score", 45) or 45), 44.0)
+        simulated["visibility_score"] = 18.0
+        simulated["recruiter_match_score"] = 16.0
+        simulated["summary"] = "DEV simulation: this candidate is currently unlikely to be found in recruiter searches for this role."
+        scores.update({"keyword_match_score": 12.0, "semantic_match_score": 28.0, "leadership_alignment_score": 18.0})
+        simulated["scores"] = scores
+        simulated["why_not_found"] = [
+            "Low recruiter search coverage.",
+            "Weak title alignment.",
+            "Missing must-have role vocabulary.",
+        ]
+        simulated["top_fixes"] = [
+            "Add the exact role title and must-have keywords where truthful.",
+            "Rewrite the summary around ownership, delivery, and measurable business impact.",
+            "Add stronger recruiter-search phrases to the skills and experience sections.",
+        ]
+    elif mode in {"strong", "strong_fit"}:
+        simulated["decision"] = "APPLY"
+        simulated["verdict"] = "Strong fit simulation"
+        simulated["final_ats_score"] = 88.0
+        simulated["visibility_score"] = 84.0
+        simulated["recruiter_match_score"] = 82.0
+        simulated["summary"] = "DEV simulation: this profile is strongly visible and aligned for recruiter search and ATS screening."
+        scores.update({"keyword_match_score": 86.0, "semantic_match_score": 88.0, "leadership_alignment_score": 82.0})
+        simulated["scores"] = scores
+        simulated["why_not_found"] = []
+        simulated["top_fixes"] = [
+            "Keep the current headline and role-aligned keywords.",
+            "Tighten the first two bullets to protect the high match score.",
+            "Use the optimized version for applications to similar roles.",
+        ]
+    elif mode in {"missing_keywords", "keywords"}:
+        extra = ["ownership", "stakeholder management", "technical leadership", "delivery roadmap", "cross-functional execution"]
+        existing = list(simulated.get("missing_keywords") or [])
+        simulated["missing_keywords"] = (extra + existing)[:12]
+        missing_signals = dict(simulated.get("missing_signals") or {})
+        missing_signals["keywords"] = (extra + list(missing_signals.get("keywords") or []))[:12]
+        simulated["missing_signals"] = missing_signals
+        simulated["top_fixes"] = [
+            "DEV simulation: strengthen missing recruiter keywords where accurate.",
+            *(list(simulated.get("top_fixes") or [])[:4]),
+        ]
+    return simulated
 
 
 def _career_suggestions(resume: dict[str, object], jd: dict[str, object]) -> list[str]:
@@ -420,6 +538,10 @@ def public_runtime_status(request: Request) -> dict[str, object]:
         "model": current.local_llm_model if current.llm_provider == "local_llm" else "server-side",
         "deterministic_core": "ready",
         "web_research_enabled": current.enable_web_research,
+        "dev_mode": current.effective_dev_full_access,
+        "dev_full_access": current.effective_dev_full_access,
+        "premium_forced": current.effective_dev_full_access,
+        "auth_bypassed": current.effective_dev_full_access,
     }
 
 
@@ -486,6 +608,7 @@ async def public_analyze(
     jd_text: str = Form(default=""),
     jd_url: str = Form(default=""),
     jd_image: Optional[UploadFile] = File(default=None),
+    dev_force: str = Form(default=""),
 ):
     require_site_auth(request)
     try:
@@ -515,6 +638,8 @@ async def public_analyze(
             use_provider_insights=get_settings().enable_llm_enhancements,
         )
         payload = _public_result_payload(result)
+        if get_settings().effective_dev_full_access and dev_force:
+            payload = _apply_dev_simulation(payload, dev_force)
         if url_warning:
             payload["url_warning"] = url_warning
         return payload

@@ -22,6 +22,8 @@ set "ENABLE_LLM_ENHANCEMENTS=true"
 set "ENABLE_WEB_RESEARCH=false"
 set "API_ONLY_MODE=true"
 set "ENABLE_INTERNAL_ENDPOINTS=true"
+set "DEV_FULL_ACCESS=true"
+set "DEV_MODE=true"
 set "SITE_AUTH_ENABLED=true"
 set "SITE_PASSWORD=local"
 set "SITE_AUTH_SECRET=local-visual-session-secret-change-me"
@@ -38,9 +40,10 @@ echo [SignalCV] Starting local visual product...
 echo [SignalCV] URL: http://127.0.0.1:8000
 echo [SignalCV] Local password: local
 echo [SignalCV] Local LLM: %LOCAL_LLM_MODEL% at %LOCAL_LLM_BASE_URL%
+echo [SignalCV] DEV MODE: Full Access Enabled ^(local only^)
 echo.
 
-start "" cmd /k "cd /d ""%~dp0"" && call .venv\Scripts\activate.bat && set APP_ENV=%APP_ENV%&& set API_HOST=%API_HOST%&& set PORT=%PORT%&& set API_PORT=%API_PORT%&& set ALLOWED_ORIGINS=%ALLOWED_ORIGINS%&& set LLM_PROVIDER=%LLM_PROVIDER%&& set LOCAL_LLM_BASE_URL=%LOCAL_LLM_BASE_URL%&& set LOCAL_LLM_MODEL=%LOCAL_LLM_MODEL%&& set ENABLE_LLM_ENHANCEMENTS=%ENABLE_LLM_ENHANCEMENTS%&& set ENABLE_WEB_RESEARCH=%ENABLE_WEB_RESEARCH%&& set API_ONLY_MODE=%API_ONLY_MODE%&& set ENABLE_INTERNAL_ENDPOINTS=%ENABLE_INTERNAL_ENDPOINTS%&& set SITE_AUTH_ENABLED=%SITE_AUTH_ENABLED%&& set SITE_PASSWORD=%SITE_PASSWORD%&& set SITE_AUTH_SECRET=%SITE_AUTH_SECRET%&& python launch.py"
+start "" cmd /k "cd /d ""%~dp0"" && call .venv\Scripts\activate.bat && set APP_ENV=%APP_ENV%&& set API_HOST=%API_HOST%&& set PORT=%PORT%&& set API_PORT=%API_PORT%&& set ALLOWED_ORIGINS=%ALLOWED_ORIGINS%&& set LLM_PROVIDER=%LLM_PROVIDER%&& set LOCAL_LLM_BASE_URL=%LOCAL_LLM_BASE_URL%&& set LOCAL_LLM_MODEL=%LOCAL_LLM_MODEL%&& set ENABLE_LLM_ENHANCEMENTS=%ENABLE_LLM_ENHANCEMENTS%&& set ENABLE_WEB_RESEARCH=%ENABLE_WEB_RESEARCH%&& set API_ONLY_MODE=%API_ONLY_MODE%&& set ENABLE_INTERNAL_ENDPOINTS=%ENABLE_INTERNAL_ENDPOINTS%&& set DEV_FULL_ACCESS=%DEV_FULL_ACCESS%&& set DEV_MODE=%DEV_MODE%&& set SITE_AUTH_ENABLED=%SITE_AUTH_ENABLED%&& set SITE_PASSWORD=%SITE_PASSWORD%&& set SITE_AUTH_SECRET=%SITE_AUTH_SECRET%&& python launch.py"
 
 timeout /t 4 /nobreak >nul
 start "" "http://127.0.0.1:8000"

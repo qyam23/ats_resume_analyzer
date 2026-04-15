@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import re
 
 from huggingface_hub import InferenceClient
@@ -13,9 +14,10 @@ from providers.base import LLMProvider
 class HuggingFaceProvider(LLMProvider):
     def __init__(self) -> None:
         self.settings = get_settings()
+        self.api_token = self.settings.hf_api_token or os.getenv("HF_TOKEN", "")
         self.client = (
-            InferenceClient(provider="auto", api_key=self.settings.hf_api_token, timeout=45)
-            if self.settings.hf_api_token
+            InferenceClient(provider="auto", api_key=self.api_token, timeout=45)
+            if self.api_token
             else None
         )
         self._usage = TokenUsage(provider="huggingface", model=self.settings.hf_model, usage_available=False)

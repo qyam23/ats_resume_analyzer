@@ -535,7 +535,7 @@ def public_runtime_status(request: Request) -> dict[str, object]:
         "provider": provider.provider_name(),
         "provider_available": provider_ok,
         "provider_detail": sanitized_error(provider_detail),
-        "model": current.local_llm_model if current.llm_provider == "local_llm" else "server-side",
+        "model": current.local_llm_model if current.llm_provider == "local_llm" else current.hf_model if current.llm_provider == "huggingface" else "server-side",
         "deterministic_core": "ready",
         "web_research_enabled": current.enable_web_research,
         "dev_mode": current.effective_dev_full_access,

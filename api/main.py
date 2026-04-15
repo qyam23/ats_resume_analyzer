@@ -4,7 +4,7 @@ import re
 from typing import Optional
 from urllib.parse import urlparse
 
-from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Request, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.responses import ORJSONResponse
@@ -14,6 +14,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
+from config.auth import auth_is_enabled, clear_session, issue_session, require_site_auth, verify_password
 from config.local_settings import LocalSettingsPayload
 from config.logging_utils import get_logger
 from config.security import enforce_upload_size, sanitized_error, validate_upload
@@ -93,8 +94,42 @@ def health() -> dict[str, object]:
         "llm_enhancements_enabled": current.enable_llm_enhancements,
         "web_research_enabled": current.enable_web_research,
         "api_only_mode": current.api_only_mode,
+        "site_auth_enabled": current.site_auth_enabled,
         "ocr_enabled": current.enable_ocr,
     }
+
+
+@app.get("/auth/status")
+def auth_status(request: Request) -> dict[str, object]:
+    if not auth_is_enabled():
+        return {"auth_enabled": False, "authenticated": True}
+    try:
+        require_site_auth(request)
+        authenticated = True
+    except HTTPException:
+        authenticated = False
+    return {"auth_enabled": True, "authenticated": authenticated}
+
+
+@app.post("/auth/login")
+async def auth_login(request: Request, response: Response) -> dict[str, object]:
+    if not auth_is_enabled():
+        return {"authenticated": True}
+    try:
+        payload = await request.json()
+    except Exception:
+        payload = {}
+    password = str(payload.get("password", ""))
+    if not verify_password(password):
+        raise HTTPException(status_code=401, detail="Invalid password.")
+    issue_session(response)
+    return {"authenticated": True}
+
+
+@app.post("/auth/logout")
+def auth_logout(response: Response) -> dict[str, object]:
+    clear_session(response)
+    return {"authenticated": False}
 
 
 @app.get("/settings")
@@ -156,10 +191,12 @@ def _public_result_payload(result: object) -> dict[str, object]:
     scores = data.get("scores", {})
     missing_keywords = diagnostics.get("missing_keywords", [])
     recommendations = data.get("recommendations", {})
+    visibility = diagnostics.get("visibility", {})
     primary_resume = diagnostics.get("docx_structured") or diagnostics.get("pdf_structured") or {}
     job_description = diagnostics.get("job_description", {})
     final_score = float(scores.get("final_ats_score", 0) or 0)
     provider_warning = diagnostics.get("provider_warning", "")
+    provider_note = diagnostics.get("provider_note", "")
     analysis_mode = (
         "local_no_api"
         if provider_warning.startswith("Public mode uses local")
@@ -169,21 +206,40 @@ def _public_result_payload(result: object) -> dict[str, object]:
     )
     if final_score >= 78:
         verdict = "Strong fit"
+        decision = "APPLY"
     elif final_score >= 62:
         verdict = "Good fit after targeted edits"
+        decision = "APPLY WITH FIXES"
     elif final_score >= 45:
         verdict = "Needs resume tailoring before applying"
+        decision = "APPLY WITH FIXES"
     else:
         verdict = "Low ATS pass likelihood"
+        decision = "LOW VISIBILITY / LOW PRIORITY"
     return {
+        "decision": decision,
         "verdict": verdict,
         "final_ats_score": final_score,
+        "visibility_score": visibility.get("visibility_score", final_score),
+        "recruiter_match_score": visibility.get("recruiter_match_score", 0),
+        "ats_parse_score": visibility.get("ats_parse_score", scores.get("parseability_score", 0)),
         "scores": scores,
         "summary": (
             f"{verdict}. ATS score is {final_score:.1f}/100. "
             f"Focus first on {len(missing_keywords)} missing keywords and the weakest score areas."
         ),
         "missing_keywords": missing_keywords[:12],
+        "missing_signals": {
+            "keywords": missing_keywords[:12],
+            "why_not_found": visibility.get("why_not_found", []),
+            "keyword_groups": visibility.get("keyword_groups", {}),
+        },
+        "top_fixes": visibility.get("top_fixes", []),
+        "rewrite_suggestions": [provider_note] if provider_note and not provider_warning else [],
+        "compatibility_scores": visibility.get("compatibility_scores", {}),
+        "what_ats_sees": visibility.get("what_ats_sees", []),
+        "what_recruiter_sees": visibility.get("what_recruiter_sees", []),
+        "why_not_found": visibility.get("why_not_found", []),
         "recommendations": (recommendations.get("english") or [])[:6],
         "hebrew_recommendations": (recommendations.get("hebrew") or [])[:6],
         "career_suggestions": _career_suggestions(primary_resume, job_description),
@@ -282,7 +338,7 @@ async def public_precheck(
     jd_url: str = Form(default=""),
     jd_image: Optional[UploadFile] = File(default=None),
 ):
-    del request
+    require_site_auth(request)
     checks, resume_ready = await _read_resume_for_precheck(pdf_resume, docx_resume)
     url_text, url_warning = _extract_text_from_url(jd_url) if jd_url.strip() else ("", "")
     if jd_image:
@@ -316,7 +372,7 @@ async def public_analyze(
     jd_url: str = Form(default=""),
     jd_image: Optional[UploadFile] = File(default=None),
 ):
-    del request
+    require_site_auth(request)
     try:
         if not pdf_resume and not docx_resume:
             raise HTTPException(status_code=400, detail="Upload a PDF or DOCX resume.")

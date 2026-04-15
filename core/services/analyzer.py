@@ -27,6 +27,7 @@ from core.scoring import build_final_scores
 from core.services.research import WebResearchService
 from core.services.session_usage import SESSION_USAGE_TRACKER
 from core.services.settings_service import SettingsService
+from core.visibility import build_visibility_profile
 from providers.factory import get_llm_provider
 
 
@@ -100,6 +101,16 @@ class ATSAnalyzerService:
             leadership_alignment_score = compute_leadership_alignment(primary_doc.structured, jd, primary_doc.text)
             quantified_impact_score = compute_quantified_impact(primary_doc.structured, jd)
             title_alignment_score = compute_title_alignment(primary_doc.structured, jd, primary_doc.text)
+            visibility_profile = build_visibility_profile(
+                resume=primary_doc.structured,
+                jd=jd,
+                resume_text=primary_doc.text,
+                missing_keywords=missing_keywords,
+                parseability_score=parseability_score,
+                keyword_match_score=keyword_match_score,
+                title_alignment_score=title_alignment_score,
+                leadership_alignment_score=leadership_alignment_score,
+            )
             self._mark(timeline, start, "matching", "completed", "Keyword, semantic, leadership, title, and impact matching finished.")
 
             current_stage = "web-research"
@@ -196,6 +207,8 @@ class ATSAnalyzerService:
                     "job_description": jd.model_dump(),
                     "missing_keywords": missing_keywords,
                     "title_alignment_score": title_alignment_score,
+                    "visibility": visibility_profile,
+                    "provider_note": provider_note,
                     "provider_warning": provider_warning,
                 },
                 consistency_mismatches=mismatches,

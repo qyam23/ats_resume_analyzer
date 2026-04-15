@@ -7,9 +7,9 @@ sdk: docker
 app_port: 7860
 ---
 
-# Bilingual ATS Resume Analyzer
+# SignalCV ATS Visibility + Job Fit Decision Engine
 
-Local-first candidate-side ATS analyzer for checking ATS hygiene, matching a resume against a target role, running optional company and job-market web research, and producing bilingual Hebrew/English recommendations.
+Private, candidate-side ATS visibility and job-fit decision engine for checking whether a resume can be parsed, found by recruiter search, aligned to a target role, and improved truthfully without inventing experience.
 
 ## What it does
 
@@ -18,17 +18,18 @@ Local-first candidate-side ATS analyzer for checking ATS hygiene, matching a res
 - Compares the PDF and DOCX versions for consistency when both are available
 - Scores ATS parseability, keyword match, semantic match, leadership alignment, quantified impact, and final ATS fit
 - Adds optional market intelligence about the role and company using server-side web research
-- Supports Hugging Face Inference Providers for production AI enhancements, plus OpenAI, Gemini, and local providers for internal use
+- Supports private server-side API enhancement through OpenAI or Gemini in this phase
+- Keeps Hugging Face provider support architecture-ready for a later free/managed phase, but it is not the active default now
 - Produces English and Hebrew summaries plus downloadable JSON and Markdown reports
 - Runs locally on Windows without Docker
 
 ## Architecture
 
-- `api/`: FastAPI backend, public UI host, secured public analysis endpoints, and internal local endpoints
+- `api/`: FastAPI backend, public UI host, password-protected public analysis endpoints, and internal local endpoints
 - `public_site/`: production public web UI served by FastAPI from `/`
 - `frontend/`: Streamlit command-center UI for local/internal use only
 - `core/`: Parsing, extraction, scoring, matching, and report generation
-- `providers/`: Swappable Hugging Face, OpenAI, Gemini, and local provider interfaces
+- `providers/`: Swappable OpenAI, Gemini, Hugging Face, and local provider interfaces
 - `config/`: Settings, logging, redaction, and request guardrails
 - `tests/`: Unit tests for scoring, security, and report behavior
 - `samples/`: Example JD input and report shape
@@ -92,19 +93,33 @@ streamlit run frontend/app.py --server.port 8501
 
 `run_local.bat` starts FastAPI on `127.0.0.1:8000` and Streamlit on `127.0.0.1:8501`. Streamlit is not the production UI.
 
-## Public production architecture
+## Private production architecture
 
-- Hugging Face Docker Spaces runs one FastAPI container
-- `public_site` is served from the same Hugging Face Space domain at `/`
+- A FastAPI container serves one protected public product surface
+- `public_site` is served from the same app domain at `/`
 - Public API calls are same-origin under `/public/precheck` and `/public/analyze`
-- Hugging Face Inference Providers are the default managed AI enhancement layer
-- `HF_API_TOKEN` stays server-side as a Hugging Face Space secret
+- The site can be protected by `SITE_AUTH_ENABLED=true` and `SITE_PASSWORD`
+- Private provider keys stay server-side only
+- OpenAI or Gemini are the active private API providers for this phase
+- Hugging Face remains available in the provider abstraction for a later phase
 - Internal endpoints (`/settings`, `/preflight`, `/analyze`) are disabled in production when `ENABLE_INTERNAL_ENDPOINTS=false`
 - Streamlit remains available for local diagnostics and private workflows only
 
-## Hugging Face Spaces deployment
+## Password protection
 
-Create a Hugging Face Docker Space and connect or upload this repository. Do not choose Gradio; this project already serves a custom FastAPI app and static `public_site`.
+Enable the private access gate with:
+
+```env
+SITE_AUTH_ENABLED=true
+SITE_PASSWORD=<your private site password>
+SITE_AUTH_SECRET=<long random cookie signing secret>
+```
+
+The password is checked only on the server. A signed HTTP-only cookie is issued after login. The browser never receives the password, provider keys, or raw provider settings. When `SITE_AUTH_ENABLED=true`, `/public/precheck` and `/public/analyze` require an authenticated session.
+
+## Hugging Face Docker readiness
+
+The repo is still ready to run as a Hugging Face Docker Space later. Do not choose Gradio; this project already serves a custom FastAPI app and static `public_site`.
 
 Docker runtime:
 
@@ -114,25 +129,29 @@ python launch.py
 
 The Dockerfile exposes port `7860`. The launcher binds to `0.0.0.0` when `APP_ENV=production` and reads the port from `PORT`, falling back to `7860` in Docker and `8000` locally.
 
-Recommended Space secrets and variables:
+For the current private API phase, recommended production variables are:
 
 - `APP_ENV=production`
 - `PORT=7860`
-- `LLM_PROVIDER=huggingface`
-- `HF_API_TOKEN=<your Hugging Face token>`
-- `HF_MODEL=Qwen/Qwen2.5-7B-Instruct`
+- `LLM_PROVIDER=openai`
+- `OPENAI_API_KEY=<your OpenAI key>`
+- `OPENAI_MODEL=gpt-5.1`
+- `OPENAI_REASONING_EFFORT=high`
 - `ENABLE_LLM_ENHANCEMENTS=true`
 - `ENABLE_WEB_RESEARCH=true`
 - `ENABLE_INTERNAL_ENDPOINTS=false`
 - `API_ONLY_MODE=true`
+- `SITE_AUTH_ENABLED=true`
+- `SITE_PASSWORD=<your private site password>`
+- `SITE_AUTH_SECRET=<long random cookie signing secret>`
 - `ALLOWED_ORIGINS=https://qyam23-ats-resume-analyzer.hf.space`
 
-If `HF_API_TOKEN` is missing, rate-limited, or the provider times out, the ATS engine still completes the deterministic analysis and skips AI rewrite commentary.
+For Gemini instead of OpenAI:
 
-Expected public URL after creating the Space:
-
-```text
-https://qyam23-ats-resume-analyzer.hf.space
+```env
+LLM_PROVIDER=gemini
+GEMINI_API_KEY=<your Gemini key>
+GEMINI_MODEL=gemini-2.5-flash
 ```
 
 Health check:
@@ -144,10 +163,25 @@ Health check:
 ## AI modes
 
 - Deterministic mode runs parsing, ATS checks, consistency, matching, scoring, and recommendations without an LLM
-- AI-enhanced mode keeps deterministic scoring as the source of truth and uses Hugging Face only for commentary and rewrite guidance
+- AI-enhanced mode keeps deterministic scoring as the source of truth and uses the private provider only for commentary, rewrite guidance, and explanation
+- If the provider fails, times out, or returns an incomplete response, the deterministic ATS result still completes
+- Hugging Face can be enabled later with `LLM_PROVIDER=huggingface`, `HF_API_TOKEN`, and `HF_MODEL`
 - GitHub Models are not used as the production inference backend
-- OpenAI, Gemini, and local model providers remain available for local/internal experimentation, but Hugging Face is the production default
+- Streamlit remains local/internal only and is not the production UI
 
+## ATS visibility model
+
+The analyzer models ATS realistically as:
+
+- ingestion and parsing
+- searchable indexing
+- recruiter query visibility
+- keyword and title discoverability
+- practical fit scoring
+
+The public result now includes product-level concepts such as `decision`, `visibility_score`, `recruiter_match_score`, `ats_parse_score`, `missing_signals`, `top_fixes`, `compatibility_scores`, `what_ats_sees`, `what_recruiter_sees`, and `career_suggestions`.
+
+Approximate compatibility scores are heuristic only and cover Workday-like, Greenhouse-like, legacy parser-like, and Israeli ATS-like behavior. They do not reverse-engineer vendor systems.
 
 ## GitHub Pages mirror
 
@@ -169,10 +203,10 @@ HF_SPACE_URL=https://your-space-name.hf.space
 
 - Core analysis works offline: parsing, PDF vs DOCX comparison, ATS formatting checks, keyword extraction, and scoring
 - The app now includes a local settings panel in the UI for provider selection, model choice, and server-side API key storage in `.local_settings.json`
-- If `HF_API_TOKEN` is configured and provider analysis is enabled, the backend adds explanation and rewrite suggestions server-side through Hugging Face
+- If a private provider key is configured and provider analysis is enabled, the backend adds explanation and rewrite suggestions server-side
 - For zero cloud-token use, select `local_llm` in the internal Streamlit settings and run a local OpenAI-compatible model server such as Ollama, LM Studio, or another local server exposed at `/v1/chat/completions`
 - Default local model settings are `LOCAL_LLM_BASE_URL=http://127.0.0.1:11434/v1` and `LOCAL_LLM_MODEL=gemma3:4b`; adjust these to the exact model name served by your local runtime
-- The public web page at `http://localhost:8000` uses deterministic analysis first and optionally adds Hugging Face commentary when configured
+- The public web page at `http://localhost:8000` uses deterministic analysis first and optionally adds private API commentary when configured
 - Local semantic scoring uses Sentence Transformers by default
 - Optional reranker support can be enabled via `RERANKER_MODEL`
 - OpenAI defaults to `gpt-5.1` with configurable reasoning effort; if your account later exposes a newer official model id, you can enter it directly in settings

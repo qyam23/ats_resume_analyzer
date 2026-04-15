@@ -3,11 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>SignalCV | ATS Resume Intelligence</title>
-    <meta
-      name="description"
-      content="Candidate-side ATS resume analysis that helps job seekers pass screening and improve fit without inventing experience."
-    />
+    <title>SignalCV | ATS Visibility Engine</title>
+    <meta name="description" content="Private ATS visibility and job-fit decision engine for candidates." />
     <link rel="stylesheet" href="assets/styles.css" />
   </head>
   <body>
@@ -18,45 +15,60 @@
             <span class="brand-mark"></span>
             <span>SignalCV</span>
           </div>
-          <button class="language-pill" id="languageToggle" type="button">עברית</button>
+          <div class="nav-actions">
+            <button class="language-pill" id="languageToggle" type="button">עברית</button>
+            <button class="language-pill hidden" id="logoutButton" type="button" data-i18n="logout">Lock session</button>
+          </div>
         </nav>
 
         <div class="hero-grid">
           <div class="hero-copy">
-            <p class="eyebrow" data-i18n="eyebrow">Candidate-side ATS intelligence</p>
-            <h1 id="hero-title" data-i18n="headline">Know if your resume can pass the first screen.</h1>
+            <p class="eyebrow" data-i18n="eyebrow">ATS Visibility + Job Fit</p>
+            <h1 id="hero-title" data-i18n="headline">Find out if your resume will be found.</h1>
             <p class="lead" data-i18n="lead">
-              Upload your resume and a job description. We check machine readability, job fit, missing signals, and practical fixes without adding skills you do not have.
+              Upload a resume and a target job. We test ATS readability, recruiter search visibility, role fit, missing signals, and truthful copy-ready fixes.
             </p>
-            <a class="primary-link" href="#analyzer" data-i18n="start">Start the check</a>
+            <a class="primary-link" href="#authGate" data-i18n="start">Start private check</a>
           </div>
           <div class="hero-visual" aria-hidden="true">
-            <img
-              src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80"
-              alt=""
-            />
+            <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80" alt="" />
             <div class="signal-stack">
-              <span>Resume parsed</span>
-              <span>Role signals mapped</span>
-              <span>ATS risk scored</span>
+              <span>ATS parse reliability</span>
+              <span>Recruiter search visibility</span>
+              <span>Truthful rewrite direction</span>
             </div>
           </div>
         </div>
       </section>
 
       <section class="pages-mirror hidden" id="pagesMirror">
-        <p class="eyebrow" data-i18n="mirrorEyebrow">Live analyzer</p>
+        <p class="eyebrow" data-i18n="mirrorEyebrow">Static mirror</p>
         <h2 data-i18n="mirrorTitle">Open the secure app to run analysis.</h2>
-        <p data-i18n="mirrorCopy">This mirror is static. Resume analysis runs on the FastAPI service.</p>
+        <p data-i18n="mirrorCopy">This page is static. Resume analysis runs only on the live FastAPI service.</p>
         <a id="liveAppLink" class="primary-link" href="#" data-i18n="openLive">Open live analyzer</a>
       </section>
 
-      <section id="analyzer" class="workspace" aria-labelledby="workspace-title">
+      <section class="auth-gate hidden" id="authGate" aria-labelledby="gate-title">
+        <div>
+          <p class="eyebrow" data-i18n="gateEyebrow">Private access</p>
+          <h2 id="gate-title" data-i18n="gateTitle">Enter the site password</h2>
+          <p data-i18n="gateLead">
+            This private phase uses server-side API enhancement. Keys and passwords are never exposed to the browser.
+          </p>
+        </div>
+        <form id="loginForm" class="login-form">
+          <input id="sitePassword" type="password" autocomplete="current-password" data-i18n-placeholder="gatePlaceholder" placeholder="Password" />
+          <button class="primary-button" type="submit" data-i18n="gateSubmit">Unlock analyzer</button>
+          <small id="gateError" class="error-text"></small>
+        </form>
+      </section>
+
+      <section id="analyzer" class="workspace locked" aria-labelledby="workspace-title">
         <div class="section-heading">
-          <p class="eyebrow" data-i18n="workspaceEyebrow">Private by design</p>
-          <h2 id="workspace-title" data-i18n="workspaceTitle">Run a focused resume check</h2>
+          <p class="eyebrow" data-i18n="workspaceEyebrow">Decision-first workspace</p>
+          <h2 id="workspace-title" data-i18n="workspaceTitle">Run a focused ATS visibility check</h2>
           <p data-i18n="workspaceLead">
-            API keys stay server-side. The public screen shows only readiness, results, and recommendations.
+            The core ATS engine runs deterministically first. AI is used only for wording and explanation when available.
           </p>
         </div>
 
@@ -72,7 +84,7 @@
               <small id="resumeFileName">No file selected</small>
             </label>
             <label class="field">
-              <span data-i18n="languageLabel">Detected language correction</span>
+              <span data-i18n="languageLabel">Language hint</span>
               <select id="languageHint">
                 <option value="auto">Auto detect</option>
                 <option value="en">English</option>
@@ -84,7 +96,7 @@
           <div class="input-panel">
             <div class="panel-head">
               <span class="step">02</span>
-              <h3 data-i18n="jdTitle">Job description</h3>
+              <h3 data-i18n="jdTitle">Target job</h3>
             </div>
             <label class="field">
               <span data-i18n="jdText">Paste job description</span>
@@ -105,7 +117,7 @@
 
           <div class="action-panel">
             <button id="precheckButton" class="secondary-button" type="button" data-i18n="precheck">Quick precheck</button>
-            <button id="analyzeButton" class="primary-button" type="submit" data-i18n="analyze">Analyze fit</button>
+            <button id="analyzeButton" class="primary-button" type="submit" data-i18n="analyze">Analyze visibility</button>
           </div>
         </form>
 
@@ -115,16 +127,17 @@
           </div>
           <div>
             <p class="eyebrow" data-i18n="status">Status</p>
-            <h3 id="statusTitle" data-i18n="statusIdle">Ready when you are</h3>
-            <p id="statusCopy" data-i18n="statusCopy">Run a short precheck first, then continue to full analysis.</p>
+            <h3 id="statusTitle" data-i18n="statusIdle">Locked until inputs are ready</h3>
+            <p id="statusCopy" data-i18n="statusCopy">Unlock the analyzer, upload a resume, add the job, then run the precheck.</p>
           </div>
         </section>
 
         <section id="results" class="results hidden">
           <div class="result-topline">
             <div>
-              <p class="eyebrow" data-i18n="resultEyebrow">Decision summary</p>
-              <h2 id="verdict">-</h2>
+              <p class="eyebrow" data-i18n="resultEyebrow">Decision</p>
+              <h2 id="decision">-</h2>
+              <p class="verdict-line" id="verdict">-</p>
               <p id="summary"></p>
             </div>
             <div class="score-ring" id="scoreRing">
@@ -132,30 +145,40 @@
               <small>/100</small>
             </div>
           </div>
+          <div class="metric-strip">
+            <div><small>Visibility</small><strong id="visibilityValue">0.0</strong></div>
+            <div><small>ATS parse</small><strong id="parseValue">0.0</strong></div>
+          </div>
           <div class="api-status" id="apiStatus"></div>
           <div class="score-bars" id="scoreBars"></div>
           <div class="result-columns">
             <div>
-              <h3 data-i18n="fixes">Recommended fixes</h3>
+              <h3 data-i18n="fixes">Fix now</h3>
               <ul id="recommendations"></ul>
+              <h3 data-i18n="rewrites">AI rewrite suggestions</h3>
+              <ul id="rewriteIdeas"></ul>
             </div>
             <div>
-              <h3 data-i18n="keywords">Missing keywords</h3>
+              <h3 data-i18n="keywords">Missing signals</h3>
               <div id="keywords" class="keyword-list"></div>
-              <h3 data-i18n="careers">Adjacent roles to explore</h3>
+              <h3 data-i18n="atsSees">What ATS sees</h3>
+              <ul id="atsSeen"></ul>
+              <h3 data-i18n="recruiterSees">What recruiter sees</h3>
+              <ul id="recruiterSeen"></ul>
+              <h3 data-i18n="careers">Adjacent roles</h3>
               <ul id="careerIdeas"></ul>
             </div>
           </div>
           <div class="export-row">
-            <button id="copyResult" type="button" class="secondary-button" data-i18n="copy">Copy summary</button>
+            <button id="copyResult" type="button" class="secondary-button" data-i18n="copy">Copy report</button>
             <button id="downloadResult" type="button" class="secondary-button" data-i18n="download">Download JSON</button>
           </div>
         </section>
       </section>
 
       <footer class="site-footer">
-        <p data-i18n="footerPrivacy">Uploaded files are processed by the server for the analysis request.</p>
-        <p data-i18n="footerKeys">AI enhancements can run through Hugging Face. Provider keys stay server-side and are never sent to the browser.</p>
+        <p data-i18n="footerPrivacy">Files are processed server-side for the current analysis request.</p>
+        <p data-i18n="footerKeys">Private API keys stay server-side. Hugging Face remains architecture-ready for a later phase.</p>
         <a href="https://github.com/qyam23/ats_resume_analyzer" rel="noreferrer" target="_blank">GitHub</a>
       </footer>
     </main>

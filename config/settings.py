@@ -35,6 +35,9 @@ class Settings(BaseSettings):
     enable_web_research: bool = True
     enable_internal_endpoints: bool = True
     api_only_mode: bool = True
+    site_auth_enabled: bool = False
+    site_password: str = Field(default="", repr=False)
+    site_auth_secret: str = Field(default="", repr=False)
     embedding_backend: str = "local"
     embedding_model: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
     reranker_model: str = ""

@@ -78,6 +78,12 @@ button:disabled {
   font-weight: 800;
 }
 
+.nav-actions {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+}
+
 .brand-mark {
   width: 34px;
   height: 34px;
@@ -211,7 +217,8 @@ h1 {
 }
 
 .workspace,
-.pages-mirror {
+.pages-mirror,
+.auth-gate {
   margin: 0 clamp(16px, 4vw, 64px) 72px;
   padding: clamp(24px, 4vw, 54px);
   border: 1px solid rgba(216, 229, 231, 0.92);
@@ -223,6 +230,48 @@ h1 {
 
 .pages-mirror {
   margin-bottom: 24px;
+}
+
+.auth-gate {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(280px, 0.45fr);
+  align-items: center;
+  gap: 28px;
+  margin-bottom: 24px;
+}
+
+.auth-gate.hidden {
+  display: none;
+}
+
+.auth-gate h2 {
+  font-size: clamp(2rem, 4.5vw, 4rem);
+  line-height: 1;
+  margin-bottom: 12px;
+}
+
+.auth-gate p {
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.login-form {
+  display: grid;
+  gap: 12px;
+}
+
+.error-text {
+  min-height: 18px;
+  color: var(--coral);
+  font-weight: 800;
+}
+
+.workspace.locked .analysis-form,
+.workspace.locked .signal-panel,
+.workspace.locked .results {
+  pointer-events: none;
+  opacity: 0.42;
+  filter: saturate(0.75);
 }
 
 .section-heading {
@@ -404,6 +453,37 @@ select:focus {
   margin-bottom: 12px;
 }
 
+.verdict-line {
+  margin-bottom: 10px;
+  color: var(--teal);
+  font-weight: 900;
+}
+
+.metric-strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 180px));
+  gap: 12px;
+  margin: 18px 0 4px;
+}
+
+.metric-strip div {
+  display: grid;
+  gap: 5px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.66);
+}
+
+.metric-strip small {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.metric-strip strong {
+  font-size: 1.65rem;
+}
+
 .score-ring {
   width: 160px;
   height: 160px;
@@ -539,6 +619,7 @@ select:focus {
   .hero-grid,
   .analysis-form,
   .section-heading,
+  .auth-gate,
   .result-topline,
   .result-columns,
   .signal-panel,

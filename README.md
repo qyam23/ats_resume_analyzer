@@ -1,7 +1,7 @@
 ---
 title: ATS Resume Analyzer
 emoji: 🧭
-colorFrom: teal
+colorFrom: blue
 colorTo: green
 sdk: docker
 app_port: 7860

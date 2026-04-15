@@ -63,7 +63,7 @@ class Settings(BaseSettings):
 
     @property
     def runtime_port(self) -> int:
-        return int(os.getenv("PORT") or self.port or self.api_port or 8000)
+        return int(os.getenv("PORT", 7860))
 
     @property
     def cors_origins(self) -> list[str]:

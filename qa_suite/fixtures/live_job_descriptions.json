@@ -78,5 +78,15 @@
     "language_profile": "English",
     "why": "High technical operations seniority, but centered on data center audits and critical facilities rather than production systems and industrial process engineering.",
     "link": "https://il.linkedin.com/jobs/view/technical-operations-manager-data-center-operational-audits-at-google-4086270397"
+  },
+  {
+    "id": "jd_09",
+    "company": "NVIDIA",
+    "role": "Thermal Mechanical Engineering Manager, Liquid Cooling Systems",
+    "location": "Yokneam, Israel",
+    "fit_strength": "weak",
+    "language_profile": "English",
+    "why": "Highly specialized thermal/mechanical leadership role requiring liquid cooling, thermo-mechanical analysis, chip-to-rack systems thinking, high-power electronics cooling, TIM, joining, soldering, and direct mechanical/thermal development evidence.",
+    "link": "https://www.nvidia.com/en-us/about-nvidia/careers/"
   }
 ]

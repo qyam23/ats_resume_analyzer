@@ -76,6 +76,37 @@ COMMON_SKILLS = {
     "ich-gcp",
     "fda submissions",
     "ema submissions",
+    "thermal engineering",
+    "thermal design",
+    "thermal analysis",
+    "thermal management",
+    "liquid cooling",
+    "cooling systems",
+    "electronics cooling",
+    "high-power electronics",
+    "thermo-mechanical analysis",
+    "mechanical design",
+    "mechanical development",
+    "chip-to-rack",
+    "rack systems",
+    "data center cooling",
+    "cold plate",
+    "heat sink",
+    "heat transfer",
+    "cfd",
+    "fea",
+    "tim",
+    "thermal interface material",
+    "soldering",
+    "joining",
+    "brazing",
+    "electronics packaging",
+    "data center operational audits",
+    "data center",
+    "critical facilities",
+    "operational audits",
+    "automotive service",
+    "automotive operations",
 }
 
 
@@ -88,14 +119,12 @@ def parse_job_description(text: str) -> JobDescriptionData:
     leadership = [term for term in ["lead", "manage", "ownership", "mentor", "stakeholder", "supplier", "contractor", "budget"] if term in lowered]
     tools = [skill for skill in skills if skill in {"python", "sql", "excel", "power bi", "tableau", "aws", "azure", "gcp", "docker", "kubernetes", "fastapi", "streamlit", "salesforce", "sap", "sas programming"}]
     seniority = next((term for term in ["intern", "junior", "mid", "senior", "lead", "manager", "director"] if term in lowered), "")
-    role_title = ""
+    role_title = _extract_role_title(text)
+    inferred_role_title = False
     first_lines = [line.strip() for line in text.splitlines() if line.strip()][:5]
-    for line in first_lines:
-        if line.lower().strip(":") not in {"responsibilities", "requirements", "qualifications", "preferred", "about the job", "job description"}:
-            role_title = line[:120]
-            break
-    if not role_title and first_lines:
-        role_title = first_lines[0][:120]
+    if not role_title:
+        role_title = _infer_role_title(skills, lowered)
+        inferred_role_title = bool(role_title)
     company_name = _extract_company_name(text, first_lines)
     section_requirements = _section_items(text, {"requirements", "qualifications", "required"})
     section_preferred = _section_items(text, {"preferred", "nice to have"})
@@ -116,6 +145,7 @@ def parse_job_description(text: str) -> JobDescriptionData:
         operational_expectations=_extract_operational_expectations(lowered),
         raw_text=text,
         detected_language=detect_language(text),
+        role_title_inferred=inferred_role_title,
     )
 
 
@@ -219,6 +249,37 @@ def _extract_requirement_phrases(value: str) -> list[str]:
         "ich-gcp",
         "fda submissions",
         "ema submissions",
+        "thermal engineering",
+        "thermal design",
+        "thermal analysis",
+        "thermal management",
+        "liquid cooling",
+        "cooling systems",
+        "electronics cooling",
+        "high-power electronics",
+        "thermo-mechanical analysis",
+        "mechanical design",
+        "mechanical development",
+        "chip-to-rack",
+        "rack systems",
+        "data center cooling",
+        "cold plate",
+        "heat sink",
+        "heat transfer",
+        "cfd",
+        "fea",
+        "tim",
+        "thermal interface material",
+        "soldering",
+        "joining",
+        "brazing",
+        "electronics packaging",
+        "data center operational audits",
+        "data center",
+        "critical facilities",
+        "operational audits",
+        "automotive service",
+        "automotive operations",
     ]
     lowered = value.lower()
     found = [phrase for phrase in phrases if phrase in lowered]
@@ -226,7 +287,34 @@ def _extract_requirement_phrases(value: str) -> list[str]:
 
 
 def _extract_domain_keywords(text: str) -> list[str]:
-    candidates = ["fintech", "healthcare", "saas", "b2b", "b2c", "operations", "analytics", "marketing", "cybersecurity"]
+    candidates = [
+        "fintech",
+        "healthcare",
+        "saas",
+        "b2b",
+        "b2c",
+        "operations",
+        "analytics",
+        "marketing",
+        "cybersecurity",
+        "thermal engineering",
+        "liquid cooling",
+        "thermo-mechanical",
+        "high-power electronics",
+        "electronics cooling",
+        "chip-to-rack",
+        "mechanical development",
+        "thermal interface material",
+        "soldering",
+        "joining",
+        "electronics packaging",
+        "data center operational audits",
+        "data center",
+        "critical facilities",
+        "operational audits",
+        "automotive service",
+        "automotive operations",
+    ]
     return [item for item in candidates if item in text]
 
 
@@ -246,4 +334,51 @@ def _extract_company_name(text: str, first_lines: list[str]) -> str:
     for line in first_lines[1:]:
         if len(line.split()) <= 6 and any(ch.isupper() for ch in line):
             return line.strip(" .,-")
+    return ""
+
+
+def _extract_role_title(text: str) -> str:
+    lines = [line.strip(" .:-") for line in text.splitlines() if line.strip()]
+    explicit_patterns = [
+        r"(?im)^\s*(?:role title|job title|position|title)\s*[:\-]\s*(.+)$",
+        r"(?im)^\s*(?:we are hiring|hiring|open role)\s*[:\-]\s*(.+)$",
+    ]
+    for pattern in explicit_patterns:
+        match = re.search(pattern, text)
+        if match:
+            candidate = _clean_role_title(match.group(1))
+            if candidate:
+                return candidate
+    for line in lines[:8]:
+        candidate = _clean_role_title(line)
+        lowered = candidate.lower()
+        if not candidate or lowered in {"responsibilities", "requirements", "qualifications", "preferred", "about the job", "job description"}:
+            continue
+        if len(candidate.split()) <= 10 and any(token in lowered for token in ["engineer", "manager", "director", "lead", "architect", "specialist"]):
+            return candidate
+    return ""
+
+
+def _clean_role_title(value: str) -> str:
+    cleaned = re.sub(r"\s+", " ", value).strip(" .:-|")
+    junk_starts = ("team.", "in this role", "you will", "we are", "about the job", "responsibilities", "requirements")
+    if cleaned.lower().startswith(junk_starts):
+        return ""
+    cleaned = re.split(r"\s+\|\s+|\s+-\s+| at ", cleaned, maxsplit=1)[0].strip()
+    if len(cleaned) > 90 or len(cleaned.split()) > 12:
+        return ""
+    return cleaned
+
+
+def _infer_role_title(skills: list[str], text: str) -> str:
+    if any(term in text for term in ["thermal", "liquid cooling", "thermo-mechanical", "electronics cooling"]):
+        if "manager" in text or "lead" in text:
+            return "Thermal Mechanical Engineering Lead"
+        return "Thermal Mechanical Engineer"
+    if "manufacturing engineering" in skills:
+        return "Manufacturing Engineering Manager" if "manager" in text else "Manufacturing Engineer"
+    if "technical operations" in skills:
+        return "Technical Operations Manager"
+    if "automation" in skills:
+        return "Automation Engineering Lead"
     return ""

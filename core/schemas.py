@@ -45,6 +45,7 @@ class ParsedDocument(BaseModel):
 
 class JobDescriptionData(BaseModel):
     role_title: str = ""
+    role_title_inferred: bool = False
     company_name: str = ""
     seniority: str = ""
     must_have_skills: list[str] = Field(default_factory=list)

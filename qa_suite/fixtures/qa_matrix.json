@@ -718,5 +718,23 @@
       "fix_truthfulness",
       "premium_value"
     ]
+  },
+  {
+    "case_id": "variant_04_industrial_project_engineering_manager__jd_09_nvidia_thermal_mechanical",
+    "resume_variant_id": "variant_04_industrial_project_engineering_manager",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_09",
+    "expected_fit_band": "weak",
+    "expected_decision_tendency": "LOW_VISIBILITY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "domain_gap_detection",
+      "hard_requirement_penalty",
+      "missing_signal_guardrail",
+      "fix_truthfulness"
+    ]
   }
 ]

@@ -8,6 +8,7 @@ from core.ats_checks import evaluate_ats_hygiene
 from core.consistency import compare_resume_versions
 from core.exceptions import AnalysisPipelineError
 from core.extractors import extract_resume_structure
+from core.domain_fit import apply_domain_fit_adjustment
 from core.matching import (
     compute_keyword_match,
     compute_leadership_alignment,
@@ -101,6 +102,21 @@ class ATSAnalyzerService:
             leadership_alignment_score = compute_leadership_alignment(primary_doc.structured, jd, primary_doc.text)
             quantified_impact_score = compute_quantified_impact(primary_doc.structured, jd)
             title_alignment_score = compute_title_alignment(primary_doc.structured, jd, primary_doc.text)
+            domain_fit = apply_domain_fit_adjustment(
+                resume=primary_doc.structured,
+                jd=jd,
+                resume_text=primary_doc.text,
+                keyword_score=keyword_match_score,
+                semantic_score=semantic_match_score,
+                title_alignment_score=title_alignment_score,
+                leadership_alignment_score=leadership_alignment_score,
+                missing_keywords=missing_keywords,
+            )
+            keyword_match_score = domain_fit.keyword_score
+            semantic_match_score = domain_fit.semantic_score
+            title_alignment_score = domain_fit.title_alignment_score
+            leadership_alignment_score = domain_fit.leadership_alignment_score
+            missing_keywords = domain_fit.missing_keywords
             visibility_profile = build_visibility_profile(
                 resume=primary_doc.structured,
                 jd=jd,
@@ -110,6 +126,7 @@ class ATSAnalyzerService:
                 keyword_match_score=keyword_match_score,
                 title_alignment_score=title_alignment_score,
                 leadership_alignment_score=leadership_alignment_score,
+                domain_fit=domain_fit.diagnostics,
             )
             self._mark(timeline, start, "matching", "completed", "Keyword, semantic, leadership, title, and impact matching finished.")
 
@@ -207,6 +224,7 @@ class ATSAnalyzerService:
                     "job_description": jd.model_dump(),
                     "missing_keywords": missing_keywords,
                     "title_alignment_score": title_alignment_score,
+                    "domain_fit": domain_fit.diagnostics,
                     "visibility": visibility_profile,
                     "provider_note": provider_note,
                     "provider_warning": provider_warning,

@@ -32,6 +32,7 @@ def build_visibility_profile(
     keyword_match_score: float,
     title_alignment_score: float,
     leadership_alignment_score: float,
+    domain_fit: dict[str, object] | None = None,
 ) -> dict[str, object]:
     searchable_resume = normalize_hebrew_text(
         "\n".join(
@@ -60,6 +61,7 @@ def build_visibility_profile(
         parseability_score=parseability_score,
         title_alignment_score=title_alignment_score,
         query_coverage=(len(matched_queries) / max(len(recruiter_queries), 1)) * 100,
+        domain_fit=domain_fit or {},
     )
     return {
         "visibility_score": visibility_score,
@@ -73,6 +75,7 @@ def build_visibility_profile(
         "what_recruiter_sees": what_recruiter_sees(resume, jd, matched_queries),
         "why_not_found": why_not_found,
         "top_fixes": top_visibility_fixes(why_not_found, missing_keywords),
+        "domain_fit": domain_fit or {},
     }
 
 
@@ -127,7 +130,8 @@ def what_ats_sees(resume: ResumeStructuredData, jd: JobDescriptionData) -> list[
     if resume.quantified_achievements:
         facts.append(f"Quantified impact lines found: {len(resume.quantified_achievements)}.")
     if jd.role_title:
-        facts.append(f"Target role parsed as: {jd.role_title}.")
+        inference_note = " (inferred)" if getattr(jd, "role_title_inferred", False) else ""
+        facts.append(f"Target role parsed as: {jd.role_title}{inference_note}.")
     return facts[:6]
 
 
@@ -176,6 +180,7 @@ def _why_not_found(
     parseability_score: float,
     title_alignment_score: float,
     query_coverage: float,
+    domain_fit: dict[str, object],
 ) -> list[str]:
     reasons = []
     if parseability_score < 75:
@@ -186,6 +191,11 @@ def _why_not_found(
         reasons.append("Too few likely recruiter search queries are clearly present in the resume.")
     if missing_keywords:
         reasons.append("Important role keywords are missing or phrased differently from the job description.")
+    critical_absent = list(domain_fit.get("critical_absent") or [])
+    if critical_absent:
+        reasons.append(f"Domain-specific hard requirements are not evidenced: {', '.join(critical_absent[:5])}.")
+    if domain_fit.get("penalty_applied"):
+        reasons.extend(str(reason) for reason in list(domain_fit.get("penalty_reasons") or [])[:2])
     if not keyword_groups.get("impact_kpi_terms"):
         reasons.append("The job description implies measurable ownership, but KPI/impact terms are thin.")
     return reasons[:6]

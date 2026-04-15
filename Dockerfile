@@ -8,7 +8,13 @@ ENV PORT=7860
 WORKDIR /app
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends build-essential \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        libglib2.0-0 \
+        libsm6 \
+        libxrender1 \
+        libxext6 \
+        libxcb1 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .

@@ -85,6 +85,34 @@ The script starts FastAPI locally, opens the browser, enables the password gate,
 
 If Ollama is installed and available in `PATH`, the launcher attempts to start `ollama serve` when the local server is not already responding. If Ollama or the model is unavailable, the deterministic ATS analysis still runs and the UI shows that local AI rewrite suggestions were skipped.
 
+### Premium test mode
+
+The public UI now has a simple internal premium gate for product testing. No payment provider is connected yet.
+
+- Free preview shows the decision, visibility score, why-not-found reasons, top fixes, one rewrite preview, adjacent roles, and a partial live resume transformation.
+- Premium/test-unlocked mode reveals the full transformed resume preview, structured rewrite pack, exact keyword/search phrase pack, full LinkedIn search plan, filters, company types, and expanded role targeting.
+- Enable local test unlock with `PREMIUM_TEST_UNLOCKED=true` in `.env` or your local environment, then restart FastAPI.
+- Keep `PREMIUM_TEST_UNLOCKED=false` for normal free-preview behavior.
+
+### Local premium customer journey
+
+The local public UI supports a full simulated paid-user flow:
+
+1. Run the free analysis.
+2. Open the premium CTA and choose a local package.
+3. Complete the virtual checkout. No card data is collected.
+4. Premium unlocks for the browser session.
+5. Download the optimized resume as Markdown or Word.
+6. Upload the exported Word file back into the resume input.
+7. Run analysis again against the same or another JD.
+8. Review the before/after comparison panel.
+
+Premium export endpoints are local/server-side:
+
+- `POST /public/premium/checkout`
+- `POST /public/export/markdown`
+- `POST /public/export/docx`
+
 ### Public app only
 
 ```powershell

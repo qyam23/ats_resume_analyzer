@@ -1,0 +1,112 @@
+{
+  "source_files": {
+    "hebrew_cv": "יובל-סטרוסטה קורות חיים.docx",
+    "english_cv": "yuval starosta cv nglish.docx"
+  },
+  "candidate": {
+    "name": "Yuval Starosta",
+    "location": "Qiryat Bialik, Israel",
+    "languages": [
+      "Hebrew",
+      "English",
+      "Russian"
+    ]
+  },
+  "variants": [
+    {
+      "id": "variant_01_manufacturing_engineering_manager",
+      "fit_profile": "strong",
+      "target_role_he": "מנהל הנדסה ייצור / Manufacturing Engineering Manager",
+      "target_role_en": "Manufacturing Engineering Manager",
+      "core_positioning_he": "מנהל הנדסי בכיר עם ניסיון בהקמה, שדרוג והרחבה של מפעלים וקווי ייצור, הובלת צוותים טכנולוגיים, שיפור יציבות תהליך, תפוקה ואיכות, והטמעת אוטומציה ובקרה בסביבת ייצור.",
+      "core_positioning_en": "Senior engineering leader with hands-on experience in establishing, upgrading, and expanding plants and production lines, leading manufacturing engineering activity, and improving throughput, process stability, quality, and control.",
+      "priority_keywords": [
+        "manufacturing engineering",
+        "production processes",
+        "line optimization",
+        "process stability",
+        "engineering team leadership",
+        "automation",
+        "technical procurement",
+        "quality improvement"
+      ],
+      "qa_expected_strength": "strong"
+    },
+    {
+      "id": "variant_02_process_engineering_and_extrusion",
+      "fit_profile": "strong",
+      "target_role_he": "מהנדס תהליך / Process Engineer (Plastics, Compounding, Extrusion)",
+      "target_role_en": "Process Engineer / Process Development Engineer",
+      "core_positioning_he": "מהנדס תהליך וחומרים עם ניסיון בתעשיית הפלסטיקה והקומפאונדים, בהעברת מוצרים מפיתוח לייצור, שיפור פרמטרי עבודה, ייצוב תהליכים, שיפור תפוקה והפחתת כשלים בקווי ייצור.",
+      "core_positioning_en": "Process and materials engineer with plastics and compounding experience, product transfer from development to production, process stabilization, parameter optimization, and production efficiency improvement.",
+      "priority_keywords": [
+        "process engineering",
+        "process control",
+        "compounding",
+        "extrusion",
+        "materials engineering",
+        "process optimization",
+        "raw materials",
+        "analytical testing"
+      ],
+      "qa_expected_strength": "strong"
+    },
+    {
+      "id": "variant_03_technical_operations_manager_industrial",
+      "fit_profile": "medium",
+      "target_role_he": "מנהל תפעול טכני / Technical Operations Manager",
+      "target_role_en": "Technical Operations Manager",
+      "core_positioning_he": "מנהל טכנולוגי ותפעולי עם ראייה מערכתית, ניסיון בניהול ממשקים, הובלת פרויקטים, ניטור תהליכים, בקרה, ספקים ויישום פתרונות מדידה ותפעול במערכי ייצור ותשתיות.",
+      "core_positioning_en": "Technical and operational leader with systems-level thinking, cross-functional execution experience, process monitoring, supplier coordination, and implementation of measurement-driven operational improvements.",
+      "priority_keywords": [
+        "technical operations",
+        "cross-functional execution",
+        "process monitoring",
+        "systems optimization",
+        "supplier coordination",
+        "project execution",
+        "data-driven operations",
+        "stakeholder management"
+      ],
+      "qa_expected_strength": "medium"
+    },
+    {
+      "id": "variant_04_industrial_project_engineering_manager",
+      "fit_profile": "strong",
+      "target_role_he": "מנהל פרויקטים הנדסיים / Project Engineering Manager",
+      "target_role_en": "Project Engineering Manager",
+      "core_positioning_he": "מנהל פרויקטים הנדסיים עם ניסיון בהובלת פרויקטים בארץ ובחו״ל משלב הצורך והתכנון ועד הביצוע בשטח, כולל תכנון תשתיות, בחירת ציוד, עבודה מול ספקים והטמעת שינויים הנדסיים.",
+      "core_positioning_en": "Project engineering leader with end-to-end execution of industrial projects in Israel and abroad, from need definition and infrastructure planning through equipment selection, supplier coordination, and on-site implementation.",
+      "priority_keywords": [
+        "project engineering",
+        "industrial projects",
+        "infrastructure planning",
+        "equipment selection",
+        "supplier negotiation",
+        "site execution",
+        "implementation",
+        "commissioning"
+      ],
+      "qa_expected_strength": "strong"
+    },
+    {
+      "id": "variant_05_automation_and_industrial_intelligence",
+      "fit_profile": "medium",
+      "target_role_he": "מנהל אוטומציה / Industrial Automation & Data Systems Lead",
+      "target_role_en": "Automation & Industrial Intelligence Lead",
+      "core_positioning_he": "מוביל מערכות אוטומציה, בקרה וניטור מבוססות נתונים בקווי ייצור, עם ניסיון בשילוב אוטומציה לשיפור רציפות תהליך, הפחתת עבודה ידנית, חיזוק הבקרה והפחתת פחתים.",
+      "core_positioning_en": "Industrial automation and data systems leader with experience implementing automation, control, and monitoring on production lines to improve continuity, reduce manual work, strengthen control, and reduce waste.",
+      "priority_keywords": [
+        "automation",
+        "control systems",
+        "monitoring",
+        "data-based systems",
+        "process continuity",
+        "industrial intelligence",
+        "line control",
+        "waste reduction"
+      ],
+      "qa_expected_strength": "medium"
+    }
+  ]
+}

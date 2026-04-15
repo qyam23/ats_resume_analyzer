@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
 import re
+from uuid import uuid4
 from typing import Optional
 from urllib.parse import urlparse
 
@@ -23,11 +24,14 @@ from core.exceptions import AnalysisPipelineError
 from core.jd_cleaner import clean_job_description_text
 from core.parsers.docx_parser import extract_docx
 from core.parsers.pdf_parser import extract_pdf
+from core.premium_exports import build_premium_docx, build_premium_markdown, safe_export_filename
+from core.product_outputs import build_product_outputs
 from core.reporting import build_failure_report
-from core.schemas import PreflightCheck, PreflightReport, PreflightRequest
+from core.schemas import JobDescriptionData, PreflightCheck, PreflightReport, PreflightRequest, ResumeStructuredData
 from core.services.analyzer import ATSAnalyzerService
 from core.services.settings_service import SettingsService
 from providers.factory import get_llm_provider
+from pydantic import BaseModel, Field
 
 
 settings = get_settings()
@@ -56,6 +60,21 @@ if PUBLIC_SITE_DIR.exists():
     app.mount("/assets", StaticFiles(directory=PUBLIC_SITE_DIR), name="public_assets")
 service = ATSAnalyzerService()
 settings_service = SettingsService()
+
+
+class PremiumCheckoutPayload(BaseModel):
+    package_id: str = "resume_job_plan"
+    package_name: str = "Resume + Job Search Plan"
+    customer_name: str = ""
+    email: str = ""
+    job_search_goal: str = ""
+
+
+class PremiumExportPayload(BaseModel):
+    result: dict[str, object] = Field(default_factory=dict)
+    customer: dict[str, object] = Field(default_factory=dict)
+    package: dict[str, object] = Field(default_factory=dict)
+    accepted_fixes: list[str] = Field(default_factory=list)
 
 
 def _active_model_name() -> str:
@@ -195,6 +214,16 @@ def _public_result_payload(result: object) -> dict[str, object]:
     primary_resume = diagnostics.get("docx_structured") or diagnostics.get("pdf_structured") or {}
     job_description = diagnostics.get("job_description", {})
     final_score = float(scores.get("final_ats_score", 0) or 0)
+    resume_model = ResumeStructuredData.model_validate(primary_resume or {})
+    jd_model = JobDescriptionData.model_validate(job_description or {})
+    product_outputs = build_product_outputs(
+        resume=resume_model,
+        jd=jd_model,
+        missing_keywords=missing_keywords,
+        visibility_profile=visibility,
+        final_score=final_score,
+        premium_unlocked=get_settings().premium_test_unlocked,
+    )
     provider_warning = diagnostics.get("provider_warning", "")
     provider_note = diagnostics.get("provider_note", "")
     analysis_mode = (
@@ -236,6 +265,17 @@ def _public_result_payload(result: object) -> dict[str, object]:
         },
         "top_fixes": visibility.get("top_fixes", []),
         "rewrite_suggestions": [provider_note] if provider_note and not provider_warning else [],
+        "rewrite_preview": product_outputs["rewrite_preview"],
+        "transformed_blocks": product_outputs["transformed_blocks"],
+        "rewrite_explanations": product_outputs["rewrite_explanations"],
+        "fix_impact_estimates": product_outputs["fix_impact_estimates"],
+        "estimated_after_scores": product_outputs["estimated_after_scores"],
+        "premium": product_outputs["premium"],
+        "premium_available": True,
+        "premium_unlocked": product_outputs["premium"]["is_unlocked"],
+        "export_markdown_ready": product_outputs["premium"]["is_unlocked"],
+        "export_docx_ready": product_outputs["premium"]["is_unlocked"],
+        "comparison_summary": {},
         "compatibility_scores": visibility.get("compatibility_scores", {}),
         "what_ats_sees": visibility.get("what_ats_sees", []),
         "what_recruiter_sees": visibility.get("what_recruiter_sees", []),
@@ -243,6 +283,7 @@ def _public_result_payload(result: object) -> dict[str, object]:
         "recommendations": (recommendations.get("english") or [])[:6],
         "hebrew_recommendations": (recommendations.get("hebrew") or [])[:6],
         "career_suggestions": _career_suggestions(primary_resume, job_description),
+        "job_search_plan": product_outputs["job_search_plan"],
         "ai_status": "skipped" if provider_warning else "completed",
         "ai_note": provider_warning,
         "analysis_mode": analysis_mode,
@@ -380,6 +421,60 @@ def public_runtime_status(request: Request) -> dict[str, object]:
         "deterministic_core": "ready",
         "web_research_enabled": current.enable_web_research,
     }
+
+
+@app.post("/public/premium/checkout")
+def public_premium_checkout(request: Request, payload: PremiumCheckoutPayload, response: Response) -> dict[str, object]:
+    require_site_auth(request)
+    order_id = f"local-{uuid4().hex[:10]}"
+    response.set_cookie(
+        key="ats_premium_sim",
+        value=order_id,
+        max_age=60 * 60 * 8,
+        httponly=True,
+        secure=get_settings().app_env == "production",
+        samesite="strict",
+        path="/",
+    )
+    return {
+        "premium_unlocked": True,
+        "order_id": order_id,
+        "package": {
+            "id": payload.package_id,
+            "name": payload.package_name,
+        },
+        "customer": {
+            "name": payload.customer_name,
+            "email_present": bool(payload.email.strip()),
+            "job_search_goal": payload.job_search_goal,
+        },
+        "message": "Local virtual purchase completed. Premium workspace is unlocked for this session.",
+    }
+
+
+@app.post("/public/export/markdown")
+def public_export_markdown(request: Request, payload: PremiumExportPayload) -> dict[str, object]:
+    require_site_auth(request)
+    data = payload.model_dump()
+    markdown = build_premium_markdown(data)
+    return {
+        "file_name": safe_export_filename(data, "md"),
+        "markdown": markdown,
+        "export_markdown_ready": True,
+    }
+
+
+@app.post("/public/export/docx")
+def public_export_docx(request: Request, payload: PremiumExportPayload) -> Response:
+    require_site_auth(request)
+    data = payload.model_dump()
+    docx_bytes = build_premium_docx(data)
+    file_name = safe_export_filename(data, "docx")
+    return Response(
+        content=docx_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f'attachment; filename="{file_name}"'},
+    )
 
 
 @app.post("/public/analyze")

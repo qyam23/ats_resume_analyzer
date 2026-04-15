@@ -1,0 +1,82 @@
+[
+  {
+    "id": "jd_01",
+    "company": "Eitan Medical",
+    "role": "Manufacturing Engineering Manager",
+    "location": "Netanya, Israel",
+    "fit_strength": "strong",
+    "language_profile": "English on Israeli LinkedIn page",
+    "why": "Strong overlap with manufacturing engineering leadership, process optimization, production stability, cross-functional execution, and engineering change work.",
+    "link": "https://il.linkedin.com/jobs/view/manufacturing-engineering-manager-at-eitan-medical-4102954512"
+  },
+  {
+    "id": "jd_02",
+    "company": "Medtronic",
+    "role": "Manufacturing Engineering Manager",
+    "location": "Yoqneam Illit, Israel",
+    "fit_strength": "strong",
+    "language_profile": "English",
+    "why": "High overlap with engineering initiatives, production optimization, manufacturing quality, and industrial execution in a multidisciplinary device environment.",
+    "link": "https://il.linkedin.com/jobs/view/manufacturing-engineering-manager-at-medtronic-4342071381"
+  },
+  {
+    "id": "jd_03",
+    "company": "Stratasys",
+    "role": "Manager, Manufacturing Engineering",
+    "location": "Kiryat Gat, Israel",
+    "fit_strength": "strong",
+    "language_profile": "English",
+    "why": "Leadership of engineers/process engineers and manufacturing process development map well to Yuval’s current senior industrial profile.",
+    "link": "https://il.linkedin.com/jobs/view/manager-manufacturing-engineering-at-stratasys-4144690554"
+  },
+  {
+    "id": "jd_04",
+    "company": "Boston Scientific",
+    "role": "Manufacturing Engineering Manager",
+    "location": "Yokneam Ilit, Israel",
+    "fit_strength": "strong",
+    "language_profile": "English",
+    "why": "Good fit around process development, lean metrics, cycle time, scrap reduction, and manufacturing engineering leadership.",
+    "link": "https://il.linkedin.com/jobs/view/manufacturing-engineering-manager-at-boston-scientific-4199559164"
+  },
+  {
+    "id": "jd_05",
+    "company": "Plastics App",
+    "role": "Process Engineer",
+    "location": "Megiddo, Israel",
+    "fit_strength": "medium",
+    "language_profile": "English on Israeli LinkedIn page",
+    "why": "Very strong domain fit in plastics/process engineering, but role seniority is below the candidate’s current leadership level.",
+    "link": "https://il.linkedin.com/jobs/view/process-engineer-at-plastics-app-4315678014"
+  },
+  {
+    "id": "jd_06",
+    "company": "Manpower Israel",
+    "role": "Manufacturing Operations Manager",
+    "location": "Petah Tikva, Israel",
+    "fit_strength": "medium",
+    "language_profile": "English on Israeli LinkedIn page",
+    "why": "Relevant on manufacturing planning, subcontractors, traceability, and operations, but less direct than manufacturing engineering leadership roles.",
+    "link": "https://il.linkedin.com/jobs/view/manufacturing-operations-manager-at-manpower-israel-4106541555"
+  },
+  {
+    "id": "jd_07",
+    "company": "COBRA IO",
+    "role": "Technical Operations Manager",
+    "location": "Center District, Israel",
+    "fit_strength": "weak_to_medium",
+    "language_profile": "Hebrew-English mixed",
+    "why": "Operational leadership and technical troubleshooting overlap, but domain is automotive service/operations rather than core manufacturing engineering.",
+    "link": "https://il.linkedin.com/jobs/view/technical-operations-manager-at-cobra-io-3936590937"
+  },
+  {
+    "id": "jd_08",
+    "company": "Google",
+    "role": "Technical Operations Manager, Data Center Operational Audits",
+    "location": "Tel Aviv-Yafo, Israel",
+    "fit_strength": "weak",
+    "language_profile": "English",
+    "why": "High technical operations seniority, but centered on data center audits and critical facilities rather than production systems and industrial process engineering.",
+    "link": "https://il.linkedin.com/jobs/view/technical-operations-manager-data-center-operational-audits-at-google-4086270397"
+  }
+]

@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     enable_web_research: bool = True
     enable_internal_endpoints: bool = True
     api_only_mode: bool = True
+    premium_test_unlocked: bool = False
     site_auth_enabled: bool = False
     site_password: str = Field(default="", repr=False)
     site_auth_secret: str = Field(default="", repr=False)

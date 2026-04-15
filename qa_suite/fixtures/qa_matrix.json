@@ -1,0 +1,722 @@
+[
+  {
+    "case_id": "variant_01_manufacturing_engineering_manager__jd_01",
+    "resume_variant_id": "variant_01_manufacturing_engineering_manager",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_01",
+    "expected_fit_band": "strong",
+    "expected_decision_tendency": "APPLY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_01_manufacturing_engineering_manager__jd_02",
+    "resume_variant_id": "variant_01_manufacturing_engineering_manager",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_02",
+    "expected_fit_band": "strong",
+    "expected_decision_tendency": "APPLY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_01_manufacturing_engineering_manager__jd_03",
+    "resume_variant_id": "variant_01_manufacturing_engineering_manager",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_03",
+    "expected_fit_band": "strong",
+    "expected_decision_tendency": "APPLY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_01_manufacturing_engineering_manager__jd_04",
+    "resume_variant_id": "variant_01_manufacturing_engineering_manager",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_04",
+    "expected_fit_band": "strong",
+    "expected_decision_tendency": "APPLY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_01_manufacturing_engineering_manager__jd_05",
+    "resume_variant_id": "variant_01_manufacturing_engineering_manager",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_05",
+    "expected_fit_band": "medium",
+    "expected_decision_tendency": "APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_01_manufacturing_engineering_manager__jd_06",
+    "resume_variant_id": "variant_01_manufacturing_engineering_manager",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_06",
+    "expected_fit_band": "medium",
+    "expected_decision_tendency": "APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_01_manufacturing_engineering_manager__jd_07",
+    "resume_variant_id": "variant_01_manufacturing_engineering_manager",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_07",
+    "expected_fit_band": "weak_to_medium",
+    "expected_decision_tendency": "LOW_VISIBILITY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_01_manufacturing_engineering_manager__jd_08",
+    "resume_variant_id": "variant_01_manufacturing_engineering_manager",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_08",
+    "expected_fit_band": "weak",
+    "expected_decision_tendency": "LOW_VISIBILITY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_02_process_engineering_and_extrusion__jd_01",
+    "resume_variant_id": "variant_02_process_engineering_and_extrusion",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_01",
+    "expected_fit_band": "strong",
+    "expected_decision_tendency": "APPLY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_02_process_engineering_and_extrusion__jd_02",
+    "resume_variant_id": "variant_02_process_engineering_and_extrusion",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_02",
+    "expected_fit_band": "strong",
+    "expected_decision_tendency": "APPLY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_02_process_engineering_and_extrusion__jd_03",
+    "resume_variant_id": "variant_02_process_engineering_and_extrusion",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_03",
+    "expected_fit_band": "strong",
+    "expected_decision_tendency": "APPLY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_02_process_engineering_and_extrusion__jd_04",
+    "resume_variant_id": "variant_02_process_engineering_and_extrusion",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_04",
+    "expected_fit_band": "strong",
+    "expected_decision_tendency": "APPLY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_02_process_engineering_and_extrusion__jd_05",
+    "resume_variant_id": "variant_02_process_engineering_and_extrusion",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_05",
+    "expected_fit_band": "medium",
+    "expected_decision_tendency": "APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_02_process_engineering_and_extrusion__jd_06",
+    "resume_variant_id": "variant_02_process_engineering_and_extrusion",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_06",
+    "expected_fit_band": "medium",
+    "expected_decision_tendency": "APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_02_process_engineering_and_extrusion__jd_07",
+    "resume_variant_id": "variant_02_process_engineering_and_extrusion",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_07",
+    "expected_fit_band": "weak_to_medium",
+    "expected_decision_tendency": "LOW_VISIBILITY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_02_process_engineering_and_extrusion__jd_08",
+    "resume_variant_id": "variant_02_process_engineering_and_extrusion",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_08",
+    "expected_fit_band": "weak",
+    "expected_decision_tendency": "LOW_VISIBILITY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_03_technical_operations_manager_industrial__jd_01",
+    "resume_variant_id": "variant_03_technical_operations_manager_industrial",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_01",
+    "expected_fit_band": "strong",
+    "expected_decision_tendency": "APPLY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_03_technical_operations_manager_industrial__jd_02",
+    "resume_variant_id": "variant_03_technical_operations_manager_industrial",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_02",
+    "expected_fit_band": "strong",
+    "expected_decision_tendency": "APPLY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_03_technical_operations_manager_industrial__jd_03",
+    "resume_variant_id": "variant_03_technical_operations_manager_industrial",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_03",
+    "expected_fit_band": "strong",
+    "expected_decision_tendency": "APPLY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_03_technical_operations_manager_industrial__jd_04",
+    "resume_variant_id": "variant_03_technical_operations_manager_industrial",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_04",
+    "expected_fit_band": "strong",
+    "expected_decision_tendency": "APPLY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_03_technical_operations_manager_industrial__jd_05",
+    "resume_variant_id": "variant_03_technical_operations_manager_industrial",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_05",
+    "expected_fit_band": "medium",
+    "expected_decision_tendency": "APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_03_technical_operations_manager_industrial__jd_06",
+    "resume_variant_id": "variant_03_technical_operations_manager_industrial",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_06",
+    "expected_fit_band": "medium",
+    "expected_decision_tendency": "APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_03_technical_operations_manager_industrial__jd_07",
+    "resume_variant_id": "variant_03_technical_operations_manager_industrial",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_07",
+    "expected_fit_band": "weak_to_medium",
+    "expected_decision_tendency": "LOW_VISIBILITY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_03_technical_operations_manager_industrial__jd_08",
+    "resume_variant_id": "variant_03_technical_operations_manager_industrial",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_08",
+    "expected_fit_band": "weak",
+    "expected_decision_tendency": "LOW_VISIBILITY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_04_industrial_project_engineering_manager__jd_01",
+    "resume_variant_id": "variant_04_industrial_project_engineering_manager",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_01",
+    "expected_fit_band": "strong",
+    "expected_decision_tendency": "APPLY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_04_industrial_project_engineering_manager__jd_02",
+    "resume_variant_id": "variant_04_industrial_project_engineering_manager",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_02",
+    "expected_fit_band": "strong",
+    "expected_decision_tendency": "APPLY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_04_industrial_project_engineering_manager__jd_03",
+    "resume_variant_id": "variant_04_industrial_project_engineering_manager",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_03",
+    "expected_fit_band": "strong",
+    "expected_decision_tendency": "APPLY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_04_industrial_project_engineering_manager__jd_04",
+    "resume_variant_id": "variant_04_industrial_project_engineering_manager",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_04",
+    "expected_fit_band": "strong",
+    "expected_decision_tendency": "APPLY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_04_industrial_project_engineering_manager__jd_05",
+    "resume_variant_id": "variant_04_industrial_project_engineering_manager",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_05",
+    "expected_fit_band": "medium",
+    "expected_decision_tendency": "APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_04_industrial_project_engineering_manager__jd_06",
+    "resume_variant_id": "variant_04_industrial_project_engineering_manager",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_06",
+    "expected_fit_band": "medium",
+    "expected_decision_tendency": "APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_04_industrial_project_engineering_manager__jd_07",
+    "resume_variant_id": "variant_04_industrial_project_engineering_manager",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_07",
+    "expected_fit_band": "weak_to_medium",
+    "expected_decision_tendency": "LOW_VISIBILITY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_04_industrial_project_engineering_manager__jd_08",
+    "resume_variant_id": "variant_04_industrial_project_engineering_manager",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_08",
+    "expected_fit_band": "weak",
+    "expected_decision_tendency": "LOW_VISIBILITY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_05_automation_and_industrial_intelligence__jd_01",
+    "resume_variant_id": "variant_05_automation_and_industrial_intelligence",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_01",
+    "expected_fit_band": "strong",
+    "expected_decision_tendency": "APPLY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_05_automation_and_industrial_intelligence__jd_02",
+    "resume_variant_id": "variant_05_automation_and_industrial_intelligence",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_02",
+    "expected_fit_band": "strong",
+    "expected_decision_tendency": "APPLY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_05_automation_and_industrial_intelligence__jd_03",
+    "resume_variant_id": "variant_05_automation_and_industrial_intelligence",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_03",
+    "expected_fit_band": "strong",
+    "expected_decision_tendency": "APPLY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_05_automation_and_industrial_intelligence__jd_04",
+    "resume_variant_id": "variant_05_automation_and_industrial_intelligence",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_04",
+    "expected_fit_band": "strong",
+    "expected_decision_tendency": "APPLY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_05_automation_and_industrial_intelligence__jd_05",
+    "resume_variant_id": "variant_05_automation_and_industrial_intelligence",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_05",
+    "expected_fit_band": "medium",
+    "expected_decision_tendency": "APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_05_automation_and_industrial_intelligence__jd_06",
+    "resume_variant_id": "variant_05_automation_and_industrial_intelligence",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_06",
+    "expected_fit_band": "medium",
+    "expected_decision_tendency": "APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_05_automation_and_industrial_intelligence__jd_07",
+    "resume_variant_id": "variant_05_automation_and_industrial_intelligence",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_07",
+    "expected_fit_band": "weak_to_medium",
+    "expected_decision_tendency": "LOW_VISIBILITY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  },
+  {
+    "case_id": "variant_05_automation_and_industrial_intelligence__jd_08",
+    "resume_variant_id": "variant_05_automation_and_industrial_intelligence",
+    "source_languages": [
+      "hebrew",
+      "english"
+    ],
+    "jd_id": "jd_08",
+    "expected_fit_band": "weak",
+    "expected_decision_tendency": "LOW_VISIBILITY_OR_APPLY_WITH_FIXES",
+    "review_focus": [
+      "decision_sanity",
+      "visibility_explanation",
+      "keyword_relevance",
+      "fix_truthfulness",
+      "premium_value"
+    ]
+  }
+]

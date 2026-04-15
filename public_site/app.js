@@ -141,9 +141,51 @@ const downloadButton = document.getElementById("downloadResult");
 const pagesMirror = document.getElementById("pagesMirror");
 const liveAppLink = document.getElementById("liveAppLink");
 const runtimeStrip = document.getElementById("runtimeStrip");
+const sideBySideView = document.getElementById("sideBySideView");
+const afterOnlyView = document.getElementById("afterOnlyView");
+const checkoutPanel = document.getElementById("checkoutPanel");
+const checkoutForm = document.getElementById("checkoutForm");
+const packageGrid = document.getElementById("packageGrid");
+const orderSummary = document.getElementById("orderSummary");
+const checkoutSuccess = document.getElementById("checkoutSuccess");
+const exportWorkspace = document.getElementById("exportWorkspace");
+const exportStatus = document.getElementById("exportStatus");
+const comparisonPanel = document.getElementById("comparisonPanel");
+const comparisonSummary = document.getElementById("comparisonSummary");
 
 let currentLanguage = "en";
 let lastResult = null;
+let previousResult = null;
+let lastPremiumOrder = JSON.parse(sessionStorage.getItem("atsPremiumOrder") || "null");
+let selectedPackage = "resume_job_plan";
+let transformationState = {
+  selectedFixes: new Set(),
+  blocks: [],
+  impactEstimates: [],
+  premiumUnlocked: false,
+  view: "side",
+};
+
+const premiumPackages = [
+  {
+    id: "resume_optimization",
+    name: "Resume Optimization",
+    price: "$19 local simulation",
+    includes: ["Full transformed resume", "Markdown export", "Word export"],
+  },
+  {
+    id: "resume_job_plan",
+    name: "Resume + Job Search Plan",
+    price: "$29 local simulation",
+    includes: ["Everything in optimization", "LinkedIn queries", "Target roles", "Keyword bundle"],
+  },
+  {
+    id: "full_premium_review",
+    name: "Full Premium Review",
+    price: "$49 local simulation",
+    includes: ["Full rewrite pack", "Search plan", "Re-check comparison", "Premium summary JSON"],
+  },
+];
 
 function t(key) {
   return translations[currentLanguage][key] || translations.en[key] || key;
@@ -253,6 +295,73 @@ function configureStaticMirror() {
   precheckButton.disabled = true;
   analyzeButton.disabled = true;
   setStatus("Static mirror", "Open the live analyzer to upload files and run the check.", "idle");
+}
+
+function renderPackageGrid() {
+  packageGrid.innerHTML = "";
+  premiumPackages.forEach((item) => {
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = `package-card ${item.id === selectedPackage ? "selected" : ""}`;
+    card.innerHTML = `
+      <strong>${item.name}</strong>
+      <span>${item.price}</span>
+      <small>${item.includes.join(" · ")}</small>
+    `;
+    card.addEventListener("click", () => {
+      selectedPackage = item.id;
+      renderPackageGrid();
+      updateOrderSummary();
+    });
+    packageGrid.appendChild(card);
+  });
+  updateOrderSummary();
+}
+
+function selectedPackageData() {
+  return premiumPackages.find((item) => item.id === selectedPackage) || premiumPackages[1];
+}
+
+function updateOrderSummary() {
+  const item = selectedPackageData();
+  orderSummary.innerHTML = `
+    <strong>Order summary</strong>
+    <span>${item.name}</span>
+    <small>${item.price} · local virtual checkout · no real payment</small>
+  `;
+}
+
+function openCheckout() {
+  checkoutPanel.classList.remove("hidden");
+  checkoutPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function premiumIsUnlocked() {
+  return Boolean(lastPremiumOrder && lastPremiumOrder.premium_unlocked);
+}
+
+function applyPremiumUnlockToResult(result) {
+  if (!result || !premiumIsUnlocked()) return result;
+  result.premium = result.premium || {};
+  result.premium.is_unlocked = true;
+  result.premium.mode = "premium_unlocked";
+  result.premium_unlocked = true;
+  result.export_markdown_ready = true;
+  result.export_docx_ready = true;
+  return result;
+}
+
+function updatePremiumUi() {
+  const unlocked = premiumIsUnlocked() || Boolean(transformationState.premiumUnlocked);
+  exportWorkspace.classList.toggle("locked-export", !unlocked);
+  exportStatus.textContent = unlocked
+    ? "Premium export package is ready. Download Markdown, Word, or the structured summary."
+    : "Unlock premium to generate export files.";
+  document.querySelectorAll("[data-open-checkout]").forEach((button) => {
+    button.textContent = unlocked ? "Premium unlocked" : button.textContent;
+    button.disabled = unlocked;
+  });
+  checkoutSuccess.classList.toggle("hidden", !unlocked);
 }
 
 function updateFileLabels() {
@@ -407,29 +516,52 @@ function updateFixProgress() {
   const fill = document.getElementById("fixProgressFill");
   if (label) label.textContent = `${applied} of ${total} fixes applied`;
   if (fill) fill.style.width = `${Math.round((applied / total) * 100)}%`;
+  steps.forEach((step) => {
+    const badge = step.querySelector(".accepted-badge");
+    if (step.classList.contains("applied") && !badge) {
+      const accepted = document.createElement("span");
+      accepted.className = "accepted-badge";
+      accepted.textContent = "Accepted";
+      step.appendChild(accepted);
+    } else if (!step.classList.contains("applied") && badge) {
+      badge.remove();
+    }
+  });
+  if (lastResult) {
+    renderBeforeAfter(lastResult);
+    renderTransformationPreview();
+  }
 }
 
 function renderFixEngine(payload) {
   const holder = document.getElementById("fixSteps");
   const keywords = (payload.missing_signals && payload.missing_signals.keywords) || payload.missing_keywords || [];
+  const estimates = payload.fix_impact_estimates || [];
   const fixes = [
     {
+      id: "keyword",
       title: "Step 1: Add keyword",
-      detail: keywords[0] ? `Add “${keywords[0]}” only where it is truthful and supported by your experience.` : "Add the strongest missing role keyword where it is truthful.",
+      detail: keywords[0] ? `Add "${keywords[0]}" only where it is truthful and supported by your experience.` : "Add the strongest missing role keyword where it is truthful.",
     },
     {
+      id: "title",
       title: "Step 2: Improve title",
       detail: "Align the resume headline with the role level recruiters are searching for.",
     },
     {
+      id: "search_phrases",
       title: "Step 3: Improve search phrases",
       detail: "Add 2-3 exact recruiter phrases in summary, skills, and achievement bullets.",
     },
-  ];
+  ].map((fix) => {
+    const impact = estimates.find((item) => item.id === fix.id) || {};
+    return { ...fix, impact };
+  });
   holder.innerHTML = "";
   fixes.forEach((fix, index) => {
     const step = document.createElement("article");
     step.className = "fix-step";
+    step.dataset.fixId = fix.id;
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.id = `fix-step-${index}`;
@@ -438,7 +570,10 @@ function renderFixEngine(payload) {
     title.textContent = fix.title;
     const detail = document.createElement("p");
     detail.textContent = fix.detail;
-    copy.append(title, detail);
+    const impact = document.createElement("small");
+    impact.className = "fix-impact";
+    impact.textContent = `Estimated +${Number(fix.impact.visibility_uplift || 0).toFixed(0)} visibility`;
+    copy.append(title, detail, impact);
     const button = document.createElement("button");
     button.type = "button";
     button.className = "secondary-button apply-fix";
@@ -447,11 +582,17 @@ function renderFixEngine(payload) {
       checkbox.checked = true;
       step.classList.add("applied");
       button.textContent = "Applied";
+      transformationState.selectedFixes.add(fix.id);
       updateFixProgress();
     };
     checkbox.addEventListener("change", () => {
       step.classList.toggle("applied", checkbox.checked);
       button.textContent = checkbox.checked ? "Applied" : "Apply";
+      if (checkbox.checked) {
+        transformationState.selectedFixes.add(fix.id);
+      } else {
+        transformationState.selectedFixes.delete(fix.id);
+      }
       updateFixProgress();
     });
     button.addEventListener("click", markApplied);
@@ -463,19 +604,28 @@ function renderFixEngine(payload) {
 
 function renderRewritePremium(payload) {
   const holder = document.getElementById("rewritePreview");
-  const rewrites = firstItems(
+  const preview = payload.rewrite_preview || {};
+  const rewrites = [
+    { label: "Improved headline", text: preview.headline },
+    { label: "Improved summary", text: preview.summary },
+    ...((preview.bullets || []).slice(0, 2).map((text, index) => ({ label: `Improved bullet ${index + 1}`, text }))),
+    { label: "Recruiter search phrases", text: (preview.search_phrases || []).join(", ") },
+  ].filter((item) => item.text);
+  const fallback = firstItems(
     payload.rewrite_suggestions,
     payload.top_fixes || payload.recommendations || ["Rewrite the summary around leadership, measurable outcomes, and exact role keywords."],
-    3
-  );
+    4
+  ).map((text, index) => ({ label: index === 0 ? "Free preview" : "Locked", text }));
+  const rows = rewrites.length ? rewrites : fallback;
+  const premiumUnlocked = Boolean(payload.premium && payload.premium.is_unlocked);
   holder.innerHTML = "";
-  rewrites.forEach((rewrite, index) => {
+  rows.forEach((rewrite, index) => {
     const row = document.createElement("div");
-    row.className = index === 0 ? "rewrite-row" : "rewrite-row locked";
+    row.className = index === 0 || premiumUnlocked ? "rewrite-row" : "rewrite-row locked";
     const label = document.createElement("span");
-    label.textContent = index === 0 ? "Free preview" : "Locked";
+    label.textContent = index === 0 || premiumUnlocked ? rewrite.label : "Locked";
     const text = document.createElement("p");
-    text.textContent = rewrite;
+    text.textContent = rewrite.text;
     row.append(label, text);
     holder.appendChild(row);
   });
@@ -484,7 +634,11 @@ function renderRewritePremium(payload) {
 function renderBeforeAfter(payload) {
   const holder = document.getElementById("beforeAfter");
   const before = Number(payload.visibility_score || 0);
-  const uplift = before < 45 ? 14 : before < 70 ? 9 : 5;
+  const appliedUplift = (payload.fix_impact_estimates || [])
+    .filter((item) => transformationState.selectedFixes.has(item.id))
+    .reduce((sum, item) => sum + Number(item.visibility_uplift || 0), 0);
+  const defaultUplift = before < 45 ? 14 : before < 70 ? 9 : 5;
+  const uplift = appliedUplift || defaultUplift;
   const after = Math.min(100, before + uplift);
   holder.innerHTML = "";
   [
@@ -500,27 +654,246 @@ function renderBeforeAfter(payload) {
     `;
     holder.appendChild(panel);
   });
+  const note = document.createElement("p");
+  note.className = "simulation-note";
+  note.textContent = appliedUplift ? "Updated from applied fixes in this session." : "Estimated preview before applying fixes.";
+  holder.appendChild(note);
 }
 
 function renderJobSearchPlan(payload) {
   const holder = document.getElementById("jobSearchPlan");
-  const roles = firstItems(payload.career_suggestions, ["Engineering Manager", "Technical Operations Manager", "Project Engineering Manager"], 3);
+  const plan = payload.job_search_plan || {};
+  const premiumUnlocked = Boolean(payload.premium && payload.premium.is_unlocked);
+  const section = holder.closest(".locked-guidance");
+  if (section) section.classList.toggle("unlocked", premiumUnlocked);
+  const filters = plan.filters || {};
   const items = [
-    `LinkedIn query: ${roles[0]} + operations + engineering`,
-    `Target titles: ${roles.join(", ")}`,
-    "Filters: posted this week, mid-senior, engineering operations",
-  ];
+    ...(plan.linkedin_queries || []).map((query) => `LinkedIn query: ${query}`),
+    `Target titles: ${(plan.target_roles || payload.career_suggestions || []).slice(0, 5).join(", ")}`,
+    `Filters: posted this week=${filters.posted_this_week ? "yes" : "optional"}, seniority=${filters.seniority || "mid-senior"}, location=${filters.location || "target location"}`,
+    `Company types: ${(plan.company_types || []).join(", ")}`,
+    `Keyword bundle: ${(((plan.keyword_bundles || {}).core) || []).join(", ")}`,
+  ].filter((item) => item.replace(/.*:\s*/, "").trim());
   holder.innerHTML = "";
-  items.forEach((item) => {
+  items.forEach((item, index) => {
     const row = document.createElement("div");
-    row.className = "locked-row";
+    row.className = index === 0 || premiumUnlocked ? "locked-row visible" : "locked-row";
     row.textContent = item;
     holder.appendChild(row);
   });
 }
 
+function transformBlockAfter(block) {
+  let text = block.before || "";
+  if (transformationState.selectedFixes.has("title") && block.id === "headline") {
+    text = block.after || text;
+  }
+  if (transformationState.selectedFixes.has("keyword") && ["headline", "summary"].includes(block.id)) {
+    text = block.after || text;
+  }
+  if (transformationState.selectedFixes.has("search_phrases") && block.id.startsWith("bullet_")) {
+    text = block.after || text;
+  }
+  return text || block.after || "No extracted text available.";
+}
+
+function highlightTerms(text, terms) {
+  let nodes = [document.createTextNode(text || "")];
+  (terms || []).slice(0, 5).forEach((term) => {
+    if (!term) return;
+    const next = [];
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(`(${escaped})`, "ig");
+    nodes.forEach((node) => {
+      if (node.nodeType !== Node.TEXT_NODE) {
+        next.push(node);
+        return;
+      }
+      const parts = node.textContent.split(regex);
+      parts.forEach((part) => {
+        if (!part) return;
+        if (part.toLowerCase() === term.toLowerCase()) {
+          const mark = document.createElement("mark");
+          mark.textContent = part;
+          next.push(mark);
+        } else {
+          next.push(document.createTextNode(part));
+        }
+      });
+    });
+    nodes = next;
+  });
+  const fragment = document.createDocumentFragment();
+  nodes.forEach((node) => fragment.appendChild(node));
+  return fragment;
+}
+
+function renderTransformationPreview() {
+  const holder = document.getElementById("transformationPreview");
+  if (!holder) return;
+  const premiumState = document.getElementById("premiumState");
+  const premiumUnlocked = Boolean(transformationState.premiumUnlocked);
+  if (premiumState) premiumState.textContent = premiumUnlocked ? "Premium test unlocked" : "Premium preview";
+  const payoff = document.querySelector(".premium-payoff");
+  if (payoff) {
+    payoff.classList.toggle("unlocked", premiumUnlocked);
+    const title = payoff.querySelector("strong");
+    const subtitle = payoff.querySelector("span");
+    if (title) title.textContent = premiumUnlocked ? "Full optimized resume is unlocked" : "Full optimized resume is locked";
+    if (subtitle) subtitle.textContent = premiumUnlocked ? "Test mode is showing the complete transformation and job search plan." : "Unlock the complete transformation, keyword pack and job search plan.";
+  }
+  holder.classList.toggle("after-only", transformationState.view === "after");
+  holder.innerHTML = "";
+  const blocks = transformationState.blocks.length ? transformationState.blocks : [];
+  const visibleBlocks = premiumUnlocked ? blocks : blocks.slice(0, 3);
+  visibleBlocks.forEach((block, index) => {
+    const card = document.createElement("article");
+    const isLocked = block.premium_locked && !premiumUnlocked;
+    card.className = `transform-block ${isLocked ? "locked" : ""}`;
+    card.style.setProperty("--delay", `${index * 70}ms`);
+    const afterText = transformBlockAfter(block);
+    const before = document.createElement("div");
+    before.className = "transform-pane before-pane";
+    before.innerHTML = `<span>${block.label} before</span>`;
+    const beforeText = document.createElement("p");
+    beforeText.textContent = block.before || "No extracted text available.";
+    before.appendChild(beforeText);
+    const after = document.createElement("div");
+    after.className = "transform-pane after-pane";
+    after.innerHTML = `<span>${block.label} after</span>`;
+    const afterTextNode = document.createElement("p");
+    afterTextNode.appendChild(highlightTerms(afterText, block.inserted_terms || []));
+    after.appendChild(afterTextNode);
+    const reason = document.createElement("small");
+    reason.className = "change-reason";
+    reason.textContent = block.change_reason || "Improved alignment.";
+    card.append(before, after, reason);
+    holder.appendChild(card);
+  });
+  if (!premiumUnlocked && blocks.length > visibleBlocks.length) {
+    const locked = document.createElement("article");
+    locked.className = "transform-block locked payoff-card";
+    locked.innerHTML = `
+      <strong>${blocks.length - visibleBlocks.length} more transformed blocks are locked</strong>
+      <p>Unlock to see the full resume transformation and exact wording pack.</p>
+    `;
+    holder.appendChild(locked);
+  }
+}
+
+function acceptedFixes() {
+  return Array.from(transformationState.selectedFixes);
+}
+
+function buildPremiumExportPayload() {
+  const packageInfo = selectedPackageData();
+  return {
+    result: lastResult || {},
+    accepted_fixes: acceptedFixes(),
+    customer: {
+      name: document.getElementById("checkoutName").value.trim() || "Local customer",
+      email: document.getElementById("checkoutEmail").value.trim(),
+      job_search_goal: document.getElementById("checkoutGoal").value.trim(),
+    },
+    package: {
+      id: packageInfo.id,
+      name: packageInfo.name,
+      price: packageInfo.price,
+      order_id: lastPremiumOrder ? lastPremiumOrder.order_id : "",
+    },
+  };
+}
+
+function downloadBlob(blob, fileName) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+async function exportMarkdownPackage() {
+  if (!premiumIsUnlocked() || !lastResult) return openCheckout();
+  exportStatus.textContent = "Generating Markdown export...";
+  const response = await fetch(`${apiBaseUrl}/public/export/markdown`, {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(buildPremiumExportPayload()),
+  });
+  const payload = await response.json();
+  if (!response.ok) throw new Error(payload.detail || "Markdown export failed.");
+  downloadBlob(new Blob([payload.markdown], { type: "text/markdown;charset=utf-8" }), payload.file_name || "optimized_resume.md");
+  exportStatus.textContent = "Markdown export downloaded.";
+}
+
+async function exportDocxPackage() {
+  if (!premiumIsUnlocked() || !lastResult) return openCheckout();
+  exportStatus.textContent = "Generating Word export...";
+  const response = await fetch(`${apiBaseUrl}/public/export/docx`, {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(buildPremiumExportPayload()),
+  });
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(detail || "Word export failed.");
+  }
+  const blob = await response.blob();
+  downloadBlob(blob, "optimized_resume_premium.docx");
+  exportStatus.textContent = "Word export downloaded. Upload it above to re-check the optimized version.";
+}
+
+function downloadPremiumSummary() {
+  if (!premiumIsUnlocked() || !lastResult) return openCheckout();
+  const payload = buildPremiumExportPayload();
+  payload.export_summary = {
+    export_markdown_ready: true,
+    export_docx_ready: true,
+    comparison_summary: comparisonSummary.innerText || "",
+  };
+  downloadBlob(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }), "premium_export_summary.json");
+}
+
+function renderComparison() {
+  if (!previousResult || !lastResult || previousResult === lastResult) {
+    comparisonPanel.classList.add("hidden");
+    return;
+  }
+  comparisonPanel.classList.remove("hidden");
+  const originalAts = Number(previousResult.final_ats_score || 0);
+  const optimizedAts = Number(lastResult.final_ats_score || 0);
+  const originalVisibility = Number(previousResult.visibility_score || 0);
+  const optimizedVisibility = Number(lastResult.visibility_score || 0);
+  const atsDelta = optimizedAts - originalAts;
+  const visibilityDelta = optimizedVisibility - originalVisibility;
+  const improved = [
+    atsDelta >= 0 ? `ATS score improved by ${atsDelta.toFixed(1)}` : `ATS score dropped by ${Math.abs(atsDelta).toFixed(1)}`,
+    visibilityDelta >= 0 ? `Visibility improved by ${visibilityDelta.toFixed(1)}` : `Visibility dropped by ${Math.abs(visibilityDelta).toFixed(1)}`,
+  ];
+  const remaining = ((lastResult.missing_signals && lastResult.missing_signals.keywords) || lastResult.missing_keywords || []).slice(0, 5);
+  comparisonSummary.innerHTML = `
+    <div><small>Original ATS</small><strong>${originalAts.toFixed(1)}</strong></div>
+    <div><small>Optimized ATS</small><strong>${optimizedAts.toFixed(1)}</strong></div>
+    <div><small>Original visibility</small><strong>${originalVisibility.toFixed(1)}</strong></div>
+    <div><small>Optimized visibility</small><strong>${optimizedVisibility.toFixed(1)}</strong></div>
+    <article><strong>What changed</strong><p>${improved.join(". ")}.</p></article>
+    <article><strong>Still weak</strong><p>${remaining.length ? remaining.join(", ") : "No major remaining keyword gap detected."}</p></article>
+  `;
+}
+
 function renderResult(payload) {
+  payload = applyPremiumUnlockToResult(payload);
   lastResult = payload;
+  transformationState = {
+    selectedFixes: new Set(),
+    blocks: payload.transformed_blocks || [],
+    impactEstimates: payload.fix_impact_estimates || [],
+    premiumUnlocked: Boolean(payload.premium && payload.premium.is_unlocked),
+    view: transformationState.view || "side",
+  };
   const score = Number(payload.final_ats_score || 0);
   const visibility = Number(payload.visibility_score || 0);
   document.getElementById("decision").textContent = payload.decision || payload.verdict || "-";
@@ -546,6 +919,9 @@ function renderResult(payload) {
   renderRewritePremium(payload);
   renderBeforeAfter(payload);
   renderJobSearchPlan(payload);
+  renderTransformationPreview();
+  updatePremiumUi();
+  renderComparison();
   renderList("careerIdeas", firstItems(payload.career_suggestions, ["Engineering Manager", "Head of Engineering Operations", "Technical Operations Manager"], 5), "Career suggestions will appear after analysis.");
   results.classList.remove("hidden");
   results.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -604,6 +980,55 @@ languageToggle.addEventListener("click", () => {
   refreshRuntimeStatus();
 });
 
+sideBySideView.addEventListener("click", () => {
+  transformationState.view = "side";
+  sideBySideView.classList.add("active");
+  afterOnlyView.classList.remove("active");
+  renderTransformationPreview();
+});
+
+afterOnlyView.addEventListener("click", () => {
+  transformationState.view = "after";
+  afterOnlyView.classList.add("active");
+  sideBySideView.classList.remove("active");
+  renderTransformationPreview();
+});
+
+document.querySelectorAll("[data-open-checkout]").forEach((button) => {
+  button.addEventListener("click", openCheckout);
+});
+
+checkoutForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const packageInfo = selectedPackageData();
+  orderSummary.classList.add("loading-order");
+  try {
+    const response = await fetch(`${apiBaseUrl}/public/premium/checkout`, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        package_id: packageInfo.id,
+        package_name: packageInfo.name,
+        customer_name: document.getElementById("checkoutName").value.trim(),
+        email: document.getElementById("checkoutEmail").value.trim(),
+        job_search_goal: document.getElementById("checkoutGoal").value.trim(),
+      }),
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.detail || "Checkout failed.");
+    lastPremiumOrder = payload;
+    sessionStorage.setItem("atsPremiumOrder", JSON.stringify(payload));
+    if (lastResult) renderResult(lastResult);
+    checkoutSuccess.classList.remove("hidden");
+    setStatus("Premium unlocked", "Export the optimized resume, then re-upload it for a before/after check.", "idle");
+  } catch (error) {
+    setStatus("Premium checkout failed", error.message, "idle");
+  } finally {
+    orderSummary.classList.remove("loading-order");
+  }
+});
+
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   gateError.textContent = "";
@@ -645,6 +1070,7 @@ form.addEventListener("submit", async (event) => {
     analyzeButton.disabled = true;
     setStage("match");
     setStatus("Analyzing ATS visibility", "Parsing, indexing, simulating recruiter search, and preparing fixes.", "loading");
+    if (lastResult) previousResult = JSON.parse(JSON.stringify(lastResult));
     const payload = await postForm("/public/analyze");
     setStage(payload.ai_status === "completed" ? "rewrite" : "match");
     renderResult(payload);
@@ -676,8 +1102,24 @@ downloadButton.addEventListener("click", () => {
   URL.revokeObjectURL(url);
 });
 
+document.getElementById("exportMarkdown").addEventListener("click", () => {
+  exportMarkdownPackage().catch((error) => {
+    exportStatus.textContent = error.message;
+  });
+});
+
+document.getElementById("exportDocx").addEventListener("click", () => {
+  exportDocxPackage().catch((error) => {
+    exportStatus.textContent = error.message;
+  });
+});
+
+document.getElementById("downloadPremiumJson").addEventListener("click", downloadPremiumSummary);
+
 setLanguage("en");
 configureStaticMirror();
+renderPackageGrid();
+updatePremiumUi();
 refreshAuth().catch(() => {
   authGate.classList.remove("hidden");
   analyzerSection.classList.add("locked");

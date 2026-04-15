@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     embedding_backend: str = "local"
     embedding_model: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
     reranker_model: str = ""
-    llm_provider: str = "openai"
+    llm_provider: str = "local_llm"
     hf_api_token: str = Field(default="", repr=False)
     hf_model: str = "Qwen/Qwen2.5-7B-Instruct"
     openai_api_key: str = Field(default="", repr=False)

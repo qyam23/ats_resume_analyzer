@@ -115,7 +115,7 @@ def get_runtime_settings() -> dict:
     except Exception:
         pass
     return {
-        "llm_provider": "openai",
+        "llm_provider": "local_llm",
         "enable_web_research": True,
         "api_only_mode": True,
         "openai_model": "gpt-5.1",
@@ -338,7 +338,7 @@ with middle:
 with right:
     with st.expander(t["settings"], expanded=False):
         with st.form("runtime-settings-form"):
-            provider_options = ["huggingface", "openai", "gemini", "local_llm"]
+            provider_options = ["local_llm", "openai", "gemini", "huggingface"]
             provider = st.selectbox(
                 "Provider",
                 options=provider_options,

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>SignalCV | ATS Visibility Engine</title>
     <meta name="description" content="Private ATS visibility and job-fit decision engine for candidates." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232f9a92'/%3E%3Cpath d='M18 37c7 9 20 9 28 0M20 25h24' stroke='white' stroke-width='6' stroke-linecap='round' fill='none'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="assets/styles.css" />
   </head>
   <body>
@@ -29,9 +30,21 @@
               Upload a resume and a target job. We test ATS readability, recruiter search visibility, role fit, missing signals, and truthful copy-ready fixes.
             </p>
             <a class="primary-link" href="#authGate" data-i18n="start">Start private check</a>
+            <div class="hero-proof" aria-label="Core capabilities">
+              <span data-i18n="proofAts">ATS visibility</span>
+              <span data-i18n="proofFit">Job-fit decision</span>
+              <span data-i18n="proofLocal">Local AI ready</span>
+            </div>
           </div>
           <div class="hero-visual" aria-hidden="true">
-            <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80" alt="" />
+            <div class="visual-grid">
+              <span></span><span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <div class="visual-orbit">
+              <b>ATS</b>
+              <i></i>
+            </div>
             <div class="signal-stack">
               <span>ATS parse reliability</span>
               <span>Recruiter search visibility</span>
@@ -57,6 +70,7 @@
           </p>
         </div>
         <form id="loginForm" class="login-form">
+          <input class="visually-hidden" type="text" autocomplete="username" value="local-user" tabindex="-1" aria-hidden="true" />
           <input id="sitePassword" type="password" autocomplete="current-password" data-i18n-placeholder="gatePlaceholder" placeholder="Password" />
           <button class="primary-button" type="submit" data-i18n="gateSubmit">Unlock analyzer</button>
           <small id="gateError" class="error-text"></small>
@@ -70,6 +84,13 @@
           <p data-i18n="workspaceLead">
             The core ATS engine runs deterministically first. AI is used only for wording and explanation when available.
           </p>
+        </div>
+
+        <div class="local-runtime-strip" id="runtimeStrip">
+          <span data-i18n="runtimeLocal">Local runtime</span>
+          <span data-i18n="runtimeFastapi">FastAPI on localhost</span>
+          <span data-i18n="runtimeLlm">Local LLM enhancement if available</span>
+          <span data-i18n="runtimeSecrets">No browser-side secrets</span>
         </div>
 
         <form id="analysisForm" class="analysis-form">
@@ -132,43 +153,124 @@
           </div>
         </section>
 
+        <section class="progress-track" aria-label="Analysis stages">
+          <div class="progress-step active" data-stage="input"><span>01</span><strong data-i18n="stageInput">Inputs</strong><small data-i18n="stageInputHint">Resume and job target</small></div>
+          <div class="progress-step" data-stage="parse"><span>02</span><strong data-i18n="stageParse">Parse</strong><small data-i18n="stageParseHint">ATS readability</small></div>
+          <div class="progress-step" data-stage="match"><span>03</span><strong data-i18n="stageMatch">Match</strong><small data-i18n="stageMatchHint">Visibility and fit</small></div>
+          <div class="progress-step" data-stage="rewrite"><span>04</span><strong data-i18n="stageRewrite">Rewrite</strong><small data-i18n="stageRewriteHint">Local AI if reachable</small></div>
+        </section>
+
         <section id="results" class="results hidden">
-          <div class="result-topline">
-            <div>
+          <div class="decision-focus">
+            <div class="decision-copy">
               <p class="eyebrow" data-i18n="resultEyebrow">Decision</p>
               <h2 id="decision">-</h2>
               <p class="verdict-line" id="verdict">-</p>
-              <p id="summary"></p>
+              <p id="mainProblemText" class="main-problem">You are not being found in recruiter searches for this role.</p>
+              <p id="summary" class="decision-summary"></p>
             </div>
-            <div class="score-ring" id="scoreRing">
-              <span id="scoreValue">0</span>
-              <small>/100</small>
-            </div>
-          </div>
-          <div class="metric-strip">
-            <div><small>Visibility</small><strong id="visibilityValue">0.0</strong></div>
-            <div><small>ATS parse</small><strong id="parseValue">0.0</strong></div>
-          </div>
-          <div class="api-status" id="apiStatus"></div>
-          <div class="score-bars" id="scoreBars"></div>
-          <div class="result-columns">
-            <div>
-              <h3 data-i18n="fixes">Fix now</h3>
-              <ul id="recommendations"></ul>
-              <h3 data-i18n="rewrites">AI rewrite suggestions</h3>
-              <ul id="rewriteIdeas"></ul>
-            </div>
-            <div>
-              <h3 data-i18n="keywords">Missing signals</h3>
-              <div id="keywords" class="keyword-list"></div>
-              <h3 data-i18n="atsSees">What ATS sees</h3>
-              <ul id="atsSeen"></ul>
-              <h3 data-i18n="recruiterSees">What recruiter sees</h3>
-              <ul id="recruiterSeen"></ul>
-              <h3 data-i18n="careers">Adjacent roles</h3>
-              <ul id="careerIdeas"></ul>
+            <div class="visibility-hero" aria-label="Primary visibility score">
+              <small>Visibility score</small>
+              <strong><span id="visibilityValue">0.0</span><span>/100</span></strong>
+              <div class="visibility-track"><div id="visibilityFill"></div></div>
             </div>
           </div>
+
+          <div class="coach-layout">
+            <section class="coach-panel" aria-label="AI Coach Panel">
+              <div class="coach-header">
+                <span class="coach-avatar">AI</span>
+                <div>
+                  <h3>AI Coach</h3>
+                  <p>Step-by-step visibility repair</p>
+                </div>
+              </div>
+              <div id="coachMessages" class="coach-messages"></div>
+              <div class="coach-progress" aria-label="Fix completion">
+                <span id="fixProgressLabel">0 of 3 fixes applied</span>
+                <div class="coach-progress-track"><div id="fixProgressFill"></div></div>
+              </div>
+            </section>
+
+            <section class="why-card">
+              <p class="eyebrow">Main blocker</p>
+              <h3>Why you are not found</h3>
+              <ul id="whyNotFound" class="why-list"></ul>
+            </section>
+          </div>
+
+          <div class="fix-grid">
+            <section class="fix-engine">
+              <div class="section-kicker">
+                <p class="eyebrow">Fix Engine</p>
+                <h3>Fix this step by step</h3>
+              </div>
+              <div id="fixSteps" class="fix-steps"></div>
+            </section>
+
+            <section class="simulation-card">
+              <div class="section-kicker">
+                <p class="eyebrow">Before / After</p>
+                <h3>Visibility simulation</h3>
+              </div>
+              <div id="beforeAfter" class="before-after"></div>
+            </section>
+          </div>
+
+          <div class="premium-grid">
+            <section class="rewrite-premium">
+              <div class="section-kicker">
+                <p class="eyebrow">Suggested rewrite</p>
+                <h3>One free example</h3>
+              </div>
+              <div id="rewritePreview" class="rewrite-preview"></div>
+              <button type="button" class="primary-button lock-cta">Unlock full optimization</button>
+            </section>
+
+            <section class="locked-guidance">
+              <div class="section-kicker">
+                <p class="eyebrow">Job search plan</p>
+                <h3>Where to apply</h3>
+              </div>
+              <div id="jobSearchPlan" class="locked-list"></div>
+              <button type="button" class="secondary-button lock-cta">Unlock job search plan</button>
+            </section>
+          </div>
+
+          <section class="career-expansion">
+            <div class="section-kicker">
+              <p class="eyebrow">Career expansion</p>
+              <h3>You can also target these roles</h3>
+            </div>
+            <ul id="careerIdeas" class="role-grid"></ul>
+          </section>
+
+          <details class="secondary-metrics">
+            <summary>Show technical report details</summary>
+            <div class="metric-strip">
+              <div><small>ATS parse</small><strong id="parseValue">0.0</strong></div>
+              <div><small>Final ATS</small><strong id="scoreValue">0</strong></div>
+            </div>
+            <div class="score-ring compact" id="scoreRing" aria-hidden="true"><span>ATS</span><small>/100</small></div>
+            <div class="api-status" id="apiStatus"></div>
+            <div class="score-bars" id="scoreBars"></div>
+            <div class="result-columns compact-report">
+              <div>
+                <h3 data-i18n="fixes">Fix now</h3>
+                <ul id="recommendations"></ul>
+                <h3 data-i18n="keywords">Missing signals</h3>
+                <div id="keywords" class="keyword-list"></div>
+              </div>
+              <div>
+                <h3 data-i18n="atsSees">What ATS sees</h3>
+                <ul id="atsSeen"></ul>
+                <h3 data-i18n="recruiterSees">What recruiter sees</h3>
+                <ul id="recruiterSeen"></ul>
+                <h3>Compatibility</h3>
+                <div id="compatibilityScores" class="compat-list"></div>
+              </div>
+            </div>
+          </details>
           <div class="export-row">
             <button id="copyResult" type="button" class="secondary-button" data-i18n="copy">Copy report</button>
             <button id="downloadResult" type="button" class="secondary-button" data-i18n="download">Download JSON</button>

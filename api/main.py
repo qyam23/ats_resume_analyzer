@@ -362,6 +362,26 @@ async def public_precheck(
     ).model_dump()
 
 
+@app.get("/public/runtime-status")
+def public_runtime_status(request: Request) -> dict[str, object]:
+    require_site_auth(request)
+    current = get_settings()
+    provider = get_llm_provider()
+    provider_ok = False
+    provider_detail = "AI enhancement is disabled."
+    if current.enable_llm_enhancements:
+        provider_ok, provider_detail = provider.validate_connection()
+    return {
+        "runtime": "local" if current.app_env == "development" else current.app_env,
+        "provider": provider.provider_name(),
+        "provider_available": provider_ok,
+        "provider_detail": sanitized_error(provider_detail),
+        "model": current.local_llm_model if current.llm_provider == "local_llm" else "server-side",
+        "deterministic_core": "ready",
+        "web_research_enabled": current.enable_web_research,
+    }
+
+
 @app.post("/public/analyze")
 @limiter.limit(f"{settings.rate_limit_per_minute}/minute")
 async def public_analyze(

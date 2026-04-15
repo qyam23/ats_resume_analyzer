@@ -66,6 +66,25 @@ copy .env.example .env
 
 ## Run
 
+### Local visual product mode
+
+For the current UX and visualization phase, use the local-only launcher:
+
+```powershell
+cd C:\Users\user\Documents\Playground\ats_resume_analyzer
+.\run_visual_local.bat
+```
+
+The script starts FastAPI locally, opens the browser, enables the password gate, and defaults the AI enhancement layer to the local OpenAI-compatible provider:
+
+- URL: `http://127.0.0.1:8000`
+- Local password: `local`
+- Provider: `local_llm`
+- Default local endpoint: `http://127.0.0.1:11434/v1`
+- Default model name: `gemma3:4b`
+
+If Ollama is installed and available in `PATH`, the launcher attempts to start `ollama serve` when the local server is not already responding. If Ollama or the model is unavailable, the deterministic ATS analysis still runs and the UI shows that local AI rewrite suggestions were skipped.
+
 ### Public app only
 
 ```powershell
@@ -163,7 +182,8 @@ Health check:
 ## AI modes
 
 - Deterministic mode runs parsing, ATS checks, consistency, matching, scoring, and recommendations without an LLM
-- AI-enhanced mode keeps deterministic scoring as the source of truth and uses the private provider only for commentary, rewrite guidance, and explanation
+- Local visual mode defaults to `local_llm` for commentary, rewrite guidance, and explanation
+- AI-enhanced mode keeps deterministic scoring as the source of truth and uses the selected provider only for commentary, rewrite guidance, and explanation
 - If the provider fails, times out, or returns an incomplete response, the deterministic ATS result still completes
 - Hugging Face can be enabled later with `LLM_PROVIDER=huggingface`, `HF_API_TOKEN`, and `HF_MODEL`
 - GitHub Models are not used as the production inference backend

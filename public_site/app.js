@@ -4,6 +4,9 @@ const translations = {
     headline: "Find out if your resume will be found.",
     lead: "Upload a resume and a target job. We test ATS readability, recruiter search visibility, role fit, missing signals, and truthful copy-ready fixes.",
     start: "Start private check",
+    proofAts: "ATS visibility",
+    proofFit: "Job-fit decision",
+    proofLocal: "Local AI ready",
     gateEyebrow: "Private access",
     gateTitle: "Enter the site password",
     gateLead: "This private phase uses server-side API enhancement. Keys and passwords are never exposed to the browser.",
@@ -13,6 +16,18 @@ const translations = {
     workspaceEyebrow: "Decision-first workspace",
     workspaceTitle: "Run a focused ATS visibility check",
     workspaceLead: "The core ATS engine runs deterministically first. AI is used only for wording and explanation when available.",
+    runtimeLocal: "Local runtime",
+    runtimeFastapi: "FastAPI on localhost",
+    runtimeLlm: "Local LLM enhancement if available",
+    runtimeSecrets: "No browser-side secrets",
+    stageInput: "Inputs",
+    stageInputHint: "Resume and job target",
+    stageParse: "Parse",
+    stageParseHint: "ATS readability",
+    stageMatch: "Match",
+    stageMatchHint: "Visibility and fit",
+    stageRewrite: "Rewrite",
+    stageRewriteHint: "Local AI if reachable",
     resumeTitle: "Resume",
     resumeUpload: "Upload PDF or DOCX resume",
     languageLabel: "Language hint",
@@ -46,6 +61,9 @@ const translations = {
     headline: "בדוק אם קורות החיים שלך יימצאו.",
     lead: "העלה קורות חיים ומשרה יעד. נבדוק קריאות ל-ATS, נראות בחיפוש מגייסים, התאמה לתפקיד, אותות חסרים ותיקונים אמיתיים שאפשר להעתיק.",
     start: "התחל בדיקה פרטית",
+    proofAts: "נראות ATS",
+    proofFit: "החלטת התאמה",
+    proofLocal: "AI מקומי מוכן",
     gateEyebrow: "גישה פרטית",
     gateTitle: "הכנס סיסמת אתר",
     gateLead: "בשלב הפרטי הזה שיפור AI רץ בצד השרת בלבד. מפתחות וסיסמאות לא נחשפים לדפדפן.",
@@ -55,6 +73,18 @@ const translations = {
     workspaceEyebrow: "מרחב החלטה תחילה",
     workspaceTitle: "בדיקת נראות ATS ממוקדת",
     workspaceLead: "מנוע ה-ATS הדטרמיניסטי רץ ראשון. AI משמש רק לניסוח והסבר כאשר הוא זמין.",
+    runtimeLocal: "ריצה לוקאלית",
+    runtimeFastapi: "FastAPI על localhost",
+    runtimeLlm: "שכבת AI מקומית אם זמינה",
+    runtimeSecrets: "אין סודות בדפדפן",
+    stageInput: "קלט",
+    stageInputHint: "קורות חיים ומשרה",
+    stageParse: "פענוח",
+    stageParseHint: "קריאות ל-ATS",
+    stageMatch: "התאמה",
+    stageMatchHint: "נראות והתאמה",
+    stageRewrite: "ניסוח",
+    stageRewriteHint: "AI מקומי אם זמין",
     resumeTitle: "קורות חיים",
     resumeUpload: "העלה קובץ PDF או DOCX",
     languageLabel: "רמז שפה",
@@ -110,6 +140,7 @@ const languageToggle = document.getElementById("languageToggle");
 const downloadButton = document.getElementById("downloadResult");
 const pagesMirror = document.getElementById("pagesMirror");
 const liveAppLink = document.getElementById("liveAppLink");
+const runtimeStrip = document.getElementById("runtimeStrip");
 
 let currentLanguage = "en";
 let lastResult = null;
@@ -139,6 +170,16 @@ function setStatus(title, copy, mode = "idle") {
   signalVisual.parentElement.classList.toggle("idle", mode === "idle");
 }
 
+function setStage(stage) {
+  const order = ["input", "parse", "match", "rewrite"];
+  const activeIndex = Math.max(0, order.indexOf(stage));
+  document.querySelectorAll(".progress-step").forEach((node) => {
+    const index = order.indexOf(node.dataset.stage);
+    node.classList.toggle("active", index === activeIndex);
+    node.classList.toggle("done", index >= 0 && index < activeIndex);
+  });
+}
+
 async function refreshAuth() {
   if (isStaticMirror) return;
   const response = await fetch(`${apiBaseUrl}/auth/status`, { credentials: "same-origin" });
@@ -147,6 +188,28 @@ async function refreshAuth() {
   authGate.classList.toggle("hidden", authenticated || !payload.auth_enabled);
   analyzerSection.classList.toggle("locked", !authenticated);
   logoutButton.classList.toggle("hidden", !authenticated || !payload.auth_enabled);
+  if (authenticated) refreshRuntimeStatus();
+}
+
+async function refreshRuntimeStatus() {
+  try {
+    const response = await fetch(`${apiBaseUrl}/public/runtime-status`, { credentials: "same-origin" });
+    if (!response.ok) return;
+    const payload = await response.json();
+    runtimeStrip.innerHTML = `
+      <span>${currentLanguage === "he" ? "סביבה" : "Runtime"}: ${payload.runtime || "local"}</span>
+      <span>${currentLanguage === "he" ? "ליבה" : "Core"}: ${payload.deterministic_core || "ready"}</span>
+      <span class="${payload.provider_available ? "chip-ok" : "chip-warn"}">${currentLanguage === "he" ? "AI מקומי" : "Local AI"}: ${payload.provider_available ? (currentLanguage === "he" ? "מחובר" : "connected") : (currentLanguage === "he" ? "לא זמין" : "not reachable")}</span>
+      <span>${currentLanguage === "he" ? "מודל" : "Model"}: ${payload.model || "local"}</span>
+    `;
+  } catch (_) {
+    runtimeStrip.innerHTML = `
+      <span>${currentLanguage === "he" ? "סביבה: לוקאלית" : "Runtime: local"}</span>
+      <span>${currentLanguage === "he" ? "ליבה: מוכנה" : "Core: ready"}</span>
+      <span class="chip-warn">${currentLanguage === "he" ? "AI מקומי: לא נבדק" : "Local AI: not checked"}</span>
+      <span>${currentLanguage === "he" ? "אין סודות בדפדפן" : "No browser-side secrets"}</span>
+    `;
+  }
 }
 
 function buildFormData() {
@@ -193,8 +256,8 @@ function configureStaticMirror() {
 }
 
 function updateFileLabels() {
-  document.getElementById("resumeFileName").textContent = resumeFile.files[0]?.name || "No file selected";
-  document.getElementById("jdImageName").textContent = jdImage.files[0]?.name || "Optional";
+  document.getElementById("resumeFileName").textContent = resumeFile.files[0]?.name || (currentLanguage === "he" ? "לא נבחר קובץ" : "No file selected");
+  document.getElementById("jdImageName").textContent = jdImage.files[0]?.name || (currentLanguage === "he" ? "אופציונלי" : "Optional");
 }
 
 function scoreColor(score) {
@@ -261,13 +324,211 @@ function renderKeywords(keywords) {
   });
 }
 
+function renderCompatibility(scores) {
+  const holder = document.getElementById("compatibilityScores");
+  holder.innerHTML = "";
+  if (!scores || Object.keys(scores).length === 0) {
+    holder.textContent = "Compatibility estimates will appear after analysis.";
+    return;
+  }
+  const labels = {
+    workday_like: "Workday-like",
+    greenhouse_like: "Greenhouse-like",
+    legacy_parser_like: "Legacy parser",
+    israeli_ats_like: "Israeli ATS-like",
+  };
+  Object.entries(scores).forEach(([key, value]) => {
+    const row = document.createElement("div");
+    const score = Number(value || 0);
+    row.innerHTML = `<span>${labels[key] || key}</span><strong>${score.toFixed(1)}</strong>`;
+    holder.appendChild(row);
+  });
+}
+
+function firstItems(values, fallback, limit = 3) {
+  const clean = (values || [])
+    .filter(Boolean)
+    .map((item) => String(item).trim())
+    .filter(Boolean);
+  return (clean.length ? clean : fallback).slice(0, limit);
+}
+
+function visibilityProblemText(visibility) {
+  if (visibility < 45) return "You are not being found in recruiter searches for this role.";
+  if (visibility < 70) return "You are partially visible, but key recruiter search signals are still weak.";
+  return "You are visible for this role; focus on sharper positioning and stronger proof.";
+}
+
+function renderCoach(payload) {
+  const holder = document.getElementById("coachMessages");
+  const visibility = Number(payload.visibility_score || 0);
+  const keywordCount = ((payload.missing_signals && payload.missing_signals.keywords) || payload.missing_keywords || []).length;
+  const messages = [
+    { side: "assistant", text: "I analyzed your resume for this role." },
+    { side: "assistant", text: visibility < 55 ? "The main issue is low visibility." : "The core fit is visible, but the positioning can be sharper." },
+    { side: "user", text: keywordCount ? `I found ${keywordCount} missing recruiter search signals.` : "I did not find a major keyword gap." },
+    { side: "assistant", text: "Let’s fix this step by step." },
+  ];
+  holder.innerHTML = "";
+  messages.forEach((message, index) => {
+    const bubble = document.createElement("div");
+    bubble.className = `chat-bubble ${message.side}`;
+    bubble.style.setProperty("--delay", `${index * 80}ms`);
+    bubble.textContent = message.text;
+    holder.appendChild(bubble);
+  });
+}
+
+function renderWhyNotFound(payload) {
+  const holder = document.getElementById("whyNotFound");
+  const keywords = (payload.missing_signals && payload.missing_signals.keywords) || payload.missing_keywords || [];
+  const reasons = firstItems(
+    (payload.missing_signals && payload.missing_signals.why_not_found) || payload.why_not_found,
+    [
+      `Missing keyword: ${keywords[0] || "interpret technical documentation"}`,
+      "Weak title alignment",
+      "Low recruiter search coverage",
+    ],
+    3
+  );
+  holder.innerHTML = "";
+  reasons.forEach((reason) => {
+    const li = document.createElement("li");
+    li.textContent = reason;
+    holder.appendChild(li);
+  });
+}
+
+function updateFixProgress() {
+  const steps = Array.from(document.querySelectorAll(".fix-step"));
+  const applied = steps.filter((step) => step.classList.contains("applied")).length;
+  const total = steps.length || 3;
+  const label = document.getElementById("fixProgressLabel");
+  const fill = document.getElementById("fixProgressFill");
+  if (label) label.textContent = `${applied} of ${total} fixes applied`;
+  if (fill) fill.style.width = `${Math.round((applied / total) * 100)}%`;
+}
+
+function renderFixEngine(payload) {
+  const holder = document.getElementById("fixSteps");
+  const keywords = (payload.missing_signals && payload.missing_signals.keywords) || payload.missing_keywords || [];
+  const fixes = [
+    {
+      title: "Step 1: Add keyword",
+      detail: keywords[0] ? `Add “${keywords[0]}” only where it is truthful and supported by your experience.` : "Add the strongest missing role keyword where it is truthful.",
+    },
+    {
+      title: "Step 2: Improve title",
+      detail: "Align the resume headline with the role level recruiters are searching for.",
+    },
+    {
+      title: "Step 3: Improve search phrases",
+      detail: "Add 2-3 exact recruiter phrases in summary, skills, and achievement bullets.",
+    },
+  ];
+  holder.innerHTML = "";
+  fixes.forEach((fix, index) => {
+    const step = document.createElement("article");
+    step.className = "fix-step";
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.id = `fix-step-${index}`;
+    const copy = document.createElement("div");
+    const title = document.createElement("strong");
+    title.textContent = fix.title;
+    const detail = document.createElement("p");
+    detail.textContent = fix.detail;
+    copy.append(title, detail);
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "secondary-button apply-fix";
+    button.textContent = "Apply";
+    const markApplied = () => {
+      checkbox.checked = true;
+      step.classList.add("applied");
+      button.textContent = "Applied";
+      updateFixProgress();
+    };
+    checkbox.addEventListener("change", () => {
+      step.classList.toggle("applied", checkbox.checked);
+      button.textContent = checkbox.checked ? "Applied" : "Apply";
+      updateFixProgress();
+    });
+    button.addEventListener("click", markApplied);
+    step.append(checkbox, copy, button);
+    holder.appendChild(step);
+  });
+  updateFixProgress();
+}
+
+function renderRewritePremium(payload) {
+  const holder = document.getElementById("rewritePreview");
+  const rewrites = firstItems(
+    payload.rewrite_suggestions,
+    payload.top_fixes || payload.recommendations || ["Rewrite the summary around leadership, measurable outcomes, and exact role keywords."],
+    3
+  );
+  holder.innerHTML = "";
+  rewrites.forEach((rewrite, index) => {
+    const row = document.createElement("div");
+    row.className = index === 0 ? "rewrite-row" : "rewrite-row locked";
+    const label = document.createElement("span");
+    label.textContent = index === 0 ? "Free preview" : "Locked";
+    const text = document.createElement("p");
+    text.textContent = rewrite;
+    row.append(label, text);
+    holder.appendChild(row);
+  });
+}
+
+function renderBeforeAfter(payload) {
+  const holder = document.getElementById("beforeAfter");
+  const before = Number(payload.visibility_score || 0);
+  const uplift = before < 45 ? 14 : before < 70 ? 9 : 5;
+  const after = Math.min(100, before + uplift);
+  holder.innerHTML = "";
+  [
+    { label: "Before", value: before, tone: "before" },
+    { label: "After fix", value: after, tone: "after" },
+  ].forEach((item) => {
+    const panel = document.createElement("div");
+    panel.className = `simulation-side ${item.tone}`;
+    panel.innerHTML = `
+      <span>${item.label}</span>
+      <strong>Visibility: ${item.value.toFixed(0)}</strong>
+      <div class="simulation-track"><div style="width:${Math.max(0, Math.min(100, item.value))}%"></div></div>
+    `;
+    holder.appendChild(panel);
+  });
+}
+
+function renderJobSearchPlan(payload) {
+  const holder = document.getElementById("jobSearchPlan");
+  const roles = firstItems(payload.career_suggestions, ["Engineering Manager", "Technical Operations Manager", "Project Engineering Manager"], 3);
+  const items = [
+    `LinkedIn query: ${roles[0]} + operations + engineering`,
+    `Target titles: ${roles.join(", ")}`,
+    "Filters: posted this week, mid-senior, engineering operations",
+  ];
+  holder.innerHTML = "";
+  items.forEach((item) => {
+    const row = document.createElement("div");
+    row.className = "locked-row";
+    row.textContent = item;
+    holder.appendChild(row);
+  });
+}
+
 function renderResult(payload) {
   lastResult = payload;
   const score = Number(payload.final_ats_score || 0);
+  const visibility = Number(payload.visibility_score || 0);
   document.getElementById("decision").textContent = payload.decision || payload.verdict || "-";
   document.getElementById("verdict").textContent = payload.verdict || "-";
   document.getElementById("summary").textContent = payload.summary || "";
-  document.getElementById("visibilityValue").textContent = Number(payload.visibility_score || 0).toFixed(1);
+  document.getElementById("mainProblemText").textContent = visibilityProblemText(visibility);
+  document.getElementById("visibilityValue").textContent = visibility.toFixed(1);
+  document.getElementById("visibilityFill").style.width = `${Math.max(0, Math.min(100, visibility))}%`;
   document.getElementById("parseValue").textContent = Number(payload.ats_parse_score || 0).toFixed(1);
   renderApiStatus(payload);
   const ring = document.getElementById("scoreRing");
@@ -275,11 +536,17 @@ function renderResult(payload) {
   document.getElementById("scoreValue").textContent = score.toFixed(0);
   renderScores(payload.scores || {}, payload);
   renderList("recommendations", payload.top_fixes || payload.recommendations, "No recommendations returned.");
-  renderList("rewriteIdeas", payload.rewrite_suggestions, "AI rewrite suggestions appear only when the private provider succeeds.");
   renderKeywords((payload.missing_signals && payload.missing_signals.keywords) || payload.missing_keywords || []);
   renderList("atsSeen", payload.what_ats_sees, "ATS view will appear after analysis.");
   renderList("recruiterSeen", payload.what_recruiter_sees, "Recruiter view will appear after analysis.");
-  renderList("careerIdeas", payload.career_suggestions, "Career suggestions will appear after analysis.");
+  renderCompatibility(payload.compatibility_scores || {});
+  renderCoach(payload);
+  renderWhyNotFound(payload);
+  renderFixEngine(payload);
+  renderRewritePremium(payload);
+  renderBeforeAfter(payload);
+  renderJobSearchPlan(payload);
+  renderList("careerIdeas", firstItems(payload.career_suggestions, ["Engineering Manager", "Head of Engineering Operations", "Technical Operations Manager"], 5), "Career suggestions will appear after analysis.");
   results.classList.remove("hidden");
   results.scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -327,8 +594,15 @@ function resultText() {
 
 resumeFile.addEventListener("change", updateFileLabels);
 jdImage.addEventListener("change", updateFileLabels);
+resumeFile.addEventListener("change", () => setStage("input"));
+jdText.addEventListener("input", () => setStage("input"));
+jdUrl.addEventListener("input", () => setStage("input"));
 
-languageToggle.addEventListener("click", () => setLanguage(currentLanguage === "en" ? "he" : "en"));
+languageToggle.addEventListener("click", () => {
+  setLanguage(currentLanguage === "en" ? "he" : "en");
+  updateFileLabels();
+  refreshRuntimeStatus();
+});
 
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -355,6 +629,7 @@ logoutButton.addEventListener("click", async () => {
 
 precheckButton.addEventListener("click", async () => {
   try {
+    setStage("parse");
     setStatus("Checking readiness", "Reading the resume and validating the job input.", "loading");
     const payload = await postForm("/public/precheck");
     const details = payload.checks.map((check) => `${check.label}: ${check.status}`).join(" · ");
@@ -368,8 +643,10 @@ form.addEventListener("submit", async (event) => {
   event.preventDefault();
   try {
     analyzeButton.disabled = true;
+    setStage("match");
     setStatus("Analyzing ATS visibility", "Parsing, indexing, simulating recruiter search, and preparing fixes.", "loading");
     const payload = await postForm("/public/analyze");
+    setStage(payload.ai_status === "completed" ? "rewrite" : "match");
     renderResult(payload);
     setStatus("Analysis complete", "Start with the decision, then fix the missing visibility signals.", "idle");
   } catch (error) {

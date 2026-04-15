@@ -26,6 +26,7 @@ class LocalOpenAICompatibleProvider(LLMProvider):
         return ok
 
     def explain(self, prompt: str, **kwargs) -> str:
+        self._select_available_model()
         max_tokens = int(kwargs.get("max_output_tokens") or 1200)
         timeout_seconds = int(kwargs.get("timeout_seconds") or self.timeout)
         payload = {
@@ -77,10 +78,53 @@ class LocalOpenAICompatibleProvider(LLMProvider):
             with httpx.Client(timeout=min(self.timeout, 10)) as client:
                 response = client.get(f"{self.base_url}/models")
                 response.raise_for_status()
+                model_names = _extract_model_names(response.json())
         except Exception as exc:
             return False, f"Local LLM server is not reachable at {self.base_url}: {exc}"
-        return True, f"Local LLM server is reachable. Model configured: {self.model}."
+        if not model_names:
+            return True, f"Local LLM server is reachable. Model configured: {self.model}."
+        if self.model in model_names:
+            return True, f"Local LLM server is reachable. Model configured: {self.model}."
+        discovered = _best_local_model(model_names)
+        if discovered:
+            self.model = discovered
+            self._usage.model = discovered
+            return True, f"Local LLM server is reachable. Using discovered Gemma/Gamma model: {discovered}."
+        return False, f"Local LLM server is reachable, but '{self.model}' was not found. Installed models: {', '.join(model_names[:8])}."
+
+    def _select_available_model(self) -> None:
+        ok, detail = self.validate_connection()
+        if not ok:
+            raise RuntimeError(detail)
 
 
 def _rough_token_count(text: str) -> int:
     return max(1, int(len(re.findall(r"\S+", text)) * 1.35))
+
+
+def _extract_model_names(payload: dict[str, object]) -> list[str]:
+    raw_models = payload.get("data") or payload.get("models") or []
+    names: list[str] = []
+    if isinstance(raw_models, list):
+        for item in raw_models:
+            if isinstance(item, dict):
+                name = item.get("id") or item.get("name") or item.get("model")
+                if isinstance(name, str) and name:
+                    names.append(name)
+            elif isinstance(item, str):
+                names.append(item)
+    return names
+
+
+def _best_local_model(model_names: list[str]) -> str:
+    preferred_markers = ["gemma3", "gemma-3", "gemma 3", "gamma3", "gamma-3", "gamma 3"]
+    lowered = [(name, name.lower().replace(":", " ")) for name in model_names]
+    for marker in preferred_markers:
+        compact = marker.replace(" ", "").replace("-", "")
+        for original, normalized in lowered:
+            if compact in normalized.replace(" ", "").replace("-", ""):
+                return original
+    for original, normalized in lowered:
+        if "gemma" in normalized or "gamma" in normalized:
+            return original
+    return ""

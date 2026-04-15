@@ -99,7 +99,7 @@ class CompanyResearch(BaseModel):
 
 
 class RuntimeSettingsSummary(BaseModel):
-    llm_provider: str = "openai"
+    llm_provider: str = "local_llm"
     enable_llm_enhancements: bool = True
     enable_web_research: bool = True
     api_only_mode: bool = True

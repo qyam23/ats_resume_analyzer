@@ -12,6 +12,7 @@ RUN apt-get update \
         build-essential \
         libglib2.0-0 \
         libsm6 \
+        libgl1 \
         libxrender1 \
         libxext6 \
         libxcb1 \

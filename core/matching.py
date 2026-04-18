@@ -10,6 +10,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 from config.settings import get_settings
 from core.extractors import extract_top_keywords
+from core.keyword_intelligence import expand_skill_terms, expand_title_terms
 from core.schemas import JobDescriptionData, ResumeStructuredData
 
 
@@ -59,7 +60,7 @@ SYNONYM_GROUPS = {
 
 
 def compute_keyword_match(resume: ResumeStructuredData, jd: JobDescriptionData, resume_text: str = "") -> tuple[float, list[str]]:
-    resume_terms = {_normalize(item) for item in resume.hard_skills}
+    resume_terms = expand_skill_terms({_normalize(item) for item in resume.hard_skills})
     resume_terms.update(_normalize(keyword) for keyword in extract_top_keywords(resume.summary + "\n" + "\n".join(resume.quantified_achievements)))
     searchable_resume = _normalize(
         "\n".join(
@@ -111,8 +112,11 @@ def compute_title_alignment(resume: ResumeStructuredData, jd: JobDescriptionData
     role = jd.role_title.lower()
     if not role:
         return 50.0
+    title_aliases = expand_title_terms(role)
     if role in titles:
         return 100.0
+    if any(alias in searchable_resume for alias in title_aliases):
+        return 82.0
     role_tokens = {token for token in re_tokens(role) if len(token) > 3}
     resume_tokens = set(re_tokens(searchable_resume))
     if {"engineering", "manager"} <= role_tokens and "engineering" in resume_tokens and any(token in resume_tokens for token in ["leader", "managed", "leading", "management"]):

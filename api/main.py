@@ -1,6 +1,8 @@
 from contextlib import asynccontextmanager
+import ipaddress
 from pathlib import Path
 import re
+import socket
 from uuid import uuid4
 from typing import Optional
 from urllib.parse import urlparse
@@ -16,6 +18,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 from config.auth import auth_is_enabled, clear_session, issue_session, require_site_auth, verify_password
+from config.build_info import get_build_info
 from config.local_settings import LocalSettingsPayload
 from config.logging_utils import get_logger
 from config.security import enforce_upload_size, sanitized_error, validate_upload
@@ -85,6 +88,8 @@ def _active_model_name() -> str:
         return current.gemini_model
     if current.llm_provider == "huggingface":
         return current.hf_model
+    if current.llm_provider == "deepseek":
+        return current.deepseek_model
     if current.llm_provider == "local_llm":
         return current.local_llm_model
     return "local-rules"
@@ -106,9 +111,13 @@ def public_home():
 @app.get("/health")
 def health() -> dict[str, object]:
     current = get_settings()
+    build_info = get_build_info()
     return {
         "status": "ok",
         "python_target": "3.10",
+        "source_commit": build_info.get("source_commit", "unknown"),
+        "build_timestamp": build_info.get("build_timestamp", ""),
+        "analyzer_version": build_info.get("analyzer_version", ""),
         "llm_provider": current.llm_provider,
         "llm_enhancements_enabled": current.enable_llm_enhancements,
         "web_research_enabled": current.enable_web_research,
@@ -190,18 +199,19 @@ def _extract_text_from_url(url: str) -> tuple[str, str]:
     if not url.strip():
         return "", ""
     parsed = urlparse(url.strip())
-    if parsed.scheme not in {"http", "https"}:
-        raise HTTPException(status_code=400, detail="Job URL must start with http:// or https://")
+    _validate_public_job_url(parsed)
     try:
-        response = httpx.get(
-            url.strip(),
-            timeout=15,
-            follow_redirects=True,
-            headers={"User-Agent": "Mozilla/5.0 ATS Resume Analyzer"},
-        )
+        with httpx.Client(timeout=15, follow_redirects=True, headers={"User-Agent": "Mozilla/5.0 ATS Resume Analyzer"}) as client:
+            response = client.get(url.strip())
+        _validate_public_job_url(urlparse(str(response.url)))
+        content_length = int(response.headers.get("content-length") or 0)
+        if content_length > 1_500_000:
+            return "", "Job URL content is too large. Paste the job text directly."
         response.raise_for_status()
     except Exception as exc:
         return "", f"Could not extract job text from URL: {sanitized_error(str(exc))}"
+    if len(response.content) > 1_500_000:
+        return "", "Job URL content is too large. Paste the job text directly."
     html = response.text
     html = re.sub(r"(?is)<(script|style|noscript).*?>.*?</\1>", " ", html)
     text = re.sub(r"(?s)<[^>]+>", " ", html)
@@ -209,6 +219,26 @@ def _extract_text_from_url(url: str) -> tuple[str, str]:
     if len(text) < 200:
         return "", "URL was reachable, but not enough readable job text was found."
     return clean_job_description_text(text[:15000]), ""
+
+
+def _validate_public_job_url(parsed) -> None:
+    if parsed.scheme not in {"http", "https"}:
+        raise HTTPException(status_code=400, detail="Job URL must start with http:// or https://")
+    if not parsed.hostname:
+        raise HTTPException(status_code=400, detail="Job URL must include a public hostname.")
+    host = parsed.hostname.strip().lower()
+    if host in {"localhost", "127.0.0.1", "::1"} or host.endswith(".local"):
+        raise HTTPException(status_code=400, detail="Local or private job URLs are not allowed.")
+    try:
+        addresses = socket.getaddrinfo(host, None)
+        for address in addresses:
+            ip = ipaddress.ip_address(address[4][0])
+            if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_multicast or ip.is_reserved:
+                raise HTTPException(status_code=400, detail="Job URL resolves to a non-public network address.")
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Could not validate job URL host: {sanitized_error(str(exc))}") from exc
 
 
 def _public_result_payload(result: object) -> dict[str, object]:
@@ -532,10 +562,19 @@ def public_runtime_status(request: Request) -> dict[str, object]:
         provider_ok, provider_detail = provider.validate_connection()
     return {
         "runtime": "local" if current.app_env == "development" else current.app_env,
+        "build": get_build_info(),
         "provider": provider.provider_name(),
         "provider_available": provider_ok,
         "provider_detail": sanitized_error(provider_detail),
-        "model": current.local_llm_model if current.llm_provider == "local_llm" else current.hf_model if current.llm_provider == "huggingface" else "server-side",
+        "model": (
+            current.local_llm_model
+            if current.llm_provider == "local_llm"
+            else current.hf_model
+            if current.llm_provider == "huggingface"
+            else current.deepseek_model
+            if current.llm_provider == "deepseek"
+            else "server-side"
+        ),
         "deterministic_core": "ready",
         "web_research_enabled": current.enable_web_research,
         "dev_mode": current.effective_dev_full_access,
@@ -662,6 +701,8 @@ def run_preflight(payload: PreflightRequest) -> dict[str, object]:
         if current.llm_provider == "gemini"
         else current.hf_model
         if current.llm_provider == "huggingface"
+        else current.deepseek_model
+        if current.llm_provider == "deepseek"
         else current.local_llm_model
     )
 
@@ -682,16 +723,18 @@ def run_preflight(payload: PreflightRequest) -> dict[str, object]:
         if current.llm_provider == "gemini"
         else bool(current.hf_api_token)
         if current.llm_provider == "huggingface"
+        else bool(current.deepseek_api_key)
+        if current.llm_provider == "deepseek"
         else True
     )
     checks.append(
         PreflightCheck(
             key="api_key",
-            label="API key" if current.llm_provider in {"openai", "gemini", "huggingface"} else "Local model",
+            label="API key" if current.llm_provider in {"openai", "gemini", "huggingface", "deepseek"} else "Local model",
             status="ok" if key_present else "error",
             detail=(
                 f"{current.llm_provider.title()} API key {'is present' if key_present else 'is missing'}."
-                if current.llm_provider in {"openai", "gemini", "huggingface"}
+                if current.llm_provider in {"openai", "gemini", "huggingface", "deepseek"}
                 else "No cloud API key is required for local LLM mode."
             ),
         )

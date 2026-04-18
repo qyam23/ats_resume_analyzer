@@ -54,7 +54,7 @@ const translations = {
     mirrorCopy: "This page is static. Resume analysis runs only on the live FastAPI service.",
     openLive: "Open live analyzer",
     footerPrivacy: "Files are processed server-side for the current analysis request.",
-    footerKeys: "Private API keys stay server-side. Hugging Face remains architecture-ready for a later phase.",
+    footerKeys: "Private AI provider keys stay server-side. Providers are swappable: DeepSeek, Hugging Face, OpenAI, Gemini, or local.",
   },
   he: {
     eyebrow: "נראות ATS + התאמה למשרה",
@@ -607,6 +607,28 @@ function renderWhyNotFound(payload) {
   });
 }
 
+function renderTruthAiBoard(payload) {
+  const truth = document.getElementById("deterministicTruth");
+  const ai = document.getElementById("aiSuggestionLayer");
+  if (!truth || !ai) return;
+  const scores = payload.scores || {};
+  const keywordCount = ((payload.missing_signals && payload.missing_signals.keywords) || payload.missing_keywords || []).length;
+  const truthItems = [
+    `Final ATS score: ${Number(payload.final_ats_score || 0).toFixed(1)}/100`,
+    `Visibility score: ${Number(payload.visibility_score || 0).toFixed(1)}/100`,
+    `Keyword match: ${Number(scores.keyword_match_score || 0).toFixed(1)}/100`,
+    `Semantic/domain fit: ${Number(scores.semantic_match_score || 0).toFixed(1)}/100`,
+    `${keywordCount} missing recruiter/ATS signals detected`,
+  ];
+  const aiItems = [
+    payload.ai_status === "completed" ? "AI explanation/rewrite layer completed server-side" : "AI layer skipped or unavailable; deterministic result is still valid",
+    "Rewrite text is advisory and must stay truthful to the resume evidence",
+    "AI does not control the final ATS score, visibility score, or pass likelihood",
+  ];
+  truth.innerHTML = truthItems.map((item) => `<li>${item}</li>`).join("");
+  ai.innerHTML = aiItems.map((item) => `<li>${item}</li>`).join("");
+}
+
 function updateFixProgress() {
   const steps = Array.from(document.querySelectorAll(".fix-step"));
   const applied = steps.filter((step) => step.classList.contains("applied")).length;
@@ -1019,6 +1041,7 @@ function renderResult(payload) {
   renderCompatibility(payload.compatibility_scores || {});
   renderCoach(payload);
   renderWhyNotFound(payload);
+  renderTruthAiBoard(payload);
   renderFixEngine(payload);
   renderRewritePremium(payload);
   renderBeforeAfter(payload);

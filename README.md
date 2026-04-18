@@ -18,7 +18,7 @@ Private, candidate-side ATS visibility and job-fit decision engine for checking 
 - Compares the PDF and DOCX versions for consistency when both are available
 - Scores ATS parseability, keyword match, semantic match, leadership alignment, quantified impact, and final ATS fit
 - Adds optional market intelligence about the role and company using server-side web research
-- Supports private server-side API enhancement through OpenAI or Gemini in this phase
+- Supports private server-side API enhancement through OpenAI, Gemini, Hugging Face, DeepSeek, or a local OpenAI-compatible model
 - Keeps Hugging Face provider support architecture-ready for a later free/managed phase, but it is not the active default now
 - Produces English and Hebrew summaries plus downloadable JSON and Markdown reports
 - Runs locally on Windows without Docker
@@ -29,7 +29,7 @@ Private, candidate-side ATS visibility and job-fit decision engine for checking 
 - `public_site/`: production public web UI served by FastAPI from `/`
 - `frontend/`: Streamlit command-center UI for local/internal use only
 - `core/`: Parsing, extraction, scoring, matching, and report generation
-- `providers/`: Swappable OpenAI, Gemini, Hugging Face, and local provider interfaces
+- `providers/`: Swappable OpenAI, Gemini, Hugging Face, DeepSeek, and local provider interfaces
 - `config/`: Settings, logging, redaction, and request guardrails
 - `tests/`: Unit tests for scoring, security, and report behavior
 - `samples/`: Example JD input and report shape
@@ -201,6 +201,17 @@ GEMINI_API_KEY=<your Gemini key>
 GEMINI_MODEL=gemini-2.5-flash
 ```
 
+For DeepSeek as the explanation/rewrite layer:
+
+```env
+LLM_PROVIDER=deepseek
+DEEPSEEK_API_KEY=<your DeepSeek key>
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_MODEL=deepseek-chat
+```
+
+DeepSeek is used only for commentary, rewrite suggestions, tailored summaries, and premium recommendation wording. It does not calculate the ATS score.
+
 Health check:
 
 ```text
@@ -214,8 +225,27 @@ Health check:
 - AI-enhanced mode keeps deterministic scoring as the source of truth and uses the selected provider only for commentary, rewrite guidance, and explanation
 - If the provider fails, times out, or returns an incomplete response, the deterministic ATS result still completes
 - Hugging Face can be enabled later with `LLM_PROVIDER=huggingface`, `HF_API_TOKEN`, and `HF_MODEL`
+- DeepSeek can be enabled with `LLM_PROVIDER=deepseek`, `DEEPSEEK_API_KEY`, `DEEPSEEK_BASE_URL`, and `DEEPSEEK_MODEL`
 - GitHub Models are not used as the production inference backend
 - Streamlit remains local/internal only and is not the production UI
+
+## Keyword intelligence research layer
+
+ATSA now includes a lightweight deterministic keyword intelligence layer in `core/keyword_intelligence.py`.
+
+- It normalizes safe skill aliases such as `sql server` -> `mssql` and `tim` -> `thermal interface material`.
+- It keeps ambiguous terms such as `pm` unexpanded unless future context-specific rules justify it.
+- It adds section-title aliases for English/Hebrew resumes and title-family aliases for recruiter-style role matching.
+- It supports the existing matching engine; it does not replace scoring with a learned model.
+
+Research notes are stored in `docs/keyword_intelligence_research.md`. A small Hugging Face metadata audit utility is available:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+python scripts\audit_keyword_datasets.py
+```
+
+The utility writes `reports/dataset_audit_summary.json` for local review. Dataset-derived artifacts are used for mining, calibration, and regression ideas only until licensing and quality are manually approved.
 
 ## ATS visibility model
 

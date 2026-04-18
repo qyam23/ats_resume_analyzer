@@ -33,6 +33,8 @@ def build_final_scores(
         final_ats = min(final_ats, 46.0)
     if keyword_match_score < 58 and semantic_match_score < 55 and title_alignment_score < 70:
         final_ats = min(final_ats, 62.0)
+    if final_ats > 80 and quantified_impact_score < 30 and semantic_match_score < 76:
+        final_ats = min(final_ats, 79.5)
     return ScoreBreakdown(
         parseability_score=round(parseability_score, 2),
         consistency_score=round(consistency_score, 2),

@@ -44,6 +44,13 @@ jobs:
             --exclude ".env" \
             --exclude ".local_settings.json" \
             ./ hf_space/
+          cat > hf_space/build_info.json <<EOF
+          {
+            "source_commit": "${GITHUB_SHA}",
+            "build_timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+            "analyzer_version": "atsa-domain-fit-v2-keyword-intel"
+          }
+          EOF
 
       - name: Commit and push to Hugging Face Space
         env:

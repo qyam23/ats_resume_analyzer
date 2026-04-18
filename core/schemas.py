@@ -108,11 +108,13 @@ class RuntimeSettingsSummary(BaseModel):
     openai_model: str = "gpt-5.1"
     openai_reasoning_effort: str = "high"
     gemini_model: str = "gemini-2.5-flash"
+    deepseek_model: str = "deepseek-chat"
     local_llm_base_url: str = ""
     local_llm_model: str = "gemma3:4b"
     hf_key_masked: str = ""
     openai_key_masked: str = ""
     gemini_key_masked: str = ""
+    deepseek_key_masked: str = ""
     default_resume_he_path: str = ""
     default_resume_en_path: str = ""
     default_resume_he_ready: bool = False

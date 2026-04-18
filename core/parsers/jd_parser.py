@@ -4,6 +4,7 @@ import re
 
 from core.language_utils import detect_language
 from core.jd_cleaner import clean_job_description_text
+from core.keyword_intelligence import known_skill_vocabulary
 from core.parsers.ocr import extract_text_from_image_bytes
 from core.schemas import JobDescriptionData
 
@@ -107,7 +108,7 @@ COMMON_SKILLS = {
     "operational audits",
     "automotive service",
     "automotive operations",
-}
+} | known_skill_vocabulary()
 
 
 def parse_job_description(text: str) -> JobDescriptionData:

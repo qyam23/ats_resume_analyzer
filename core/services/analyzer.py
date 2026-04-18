@@ -271,7 +271,7 @@ class ATSAnalyzerService:
         message = sanitized_error(str(exc)) or "external provider did not return a usable response"
         lower = message.lower()
         if "incomplete" in lower:
-            return "OpenAI returned an incomplete answer, usually because the output limit was reached or the reasoning task was too long"
+            return "The AI provider returned an incomplete answer, usually because the output limit was reached or the task was too long"
         if "timed out" in lower or "timeout" in lower:
-            return "OpenAI did not finish before the local timeout"
+            return "The AI provider did not finish before the local timeout"
         return message

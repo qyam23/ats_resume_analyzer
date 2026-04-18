@@ -894,7 +894,8 @@ select:focus {
 
 .coach-layout,
 .fix-grid,
-.premium-grid {
+.premium-grid,
+.truth-ai-board {
   display: grid;
   gap: 18px;
   margin-top: 18px;
@@ -905,12 +906,14 @@ select:focus {
 }
 
 .fix-grid,
-.premium-grid {
+.premium-grid,
+.truth-ai-board {
   grid-template-columns: minmax(0, 1fr) minmax(280px, 0.76fr);
 }
 
 .coach-panel,
 .why-card,
+.truth-ai-board article,
 .fix-engine,
 .simulation-card,
 .checkout-panel,
@@ -928,6 +931,7 @@ select:focus {
 
 .coach-panel,
 .why-card,
+.truth-ai-board article,
 .fix-engine,
 .simulation-card,
 .checkout-panel,
@@ -937,6 +941,32 @@ select:focus {
 .locked-guidance,
 .career-expansion {
   padding: clamp(18px, 3vw, 28px);
+}
+
+.truth-ai-board article:first-child {
+  border-color: rgba(47, 154, 146, 0.26);
+  background: linear-gradient(180deg, rgba(238, 247, 245, 0.82), rgba(255, 255, 255, 0.72));
+}
+
+.truth-ai-board article:last-child {
+  border-color: rgba(98, 130, 189, 0.22);
+  background: linear-gradient(180deg, rgba(241, 246, 253, 0.82), rgba(255, 255, 255, 0.72));
+}
+
+.truth-ai-board ul {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0 0;
+  padding: 0;
+}
+
+.truth-ai-board li {
+  list-style: none;
+  padding: 12px 14px;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid rgba(216, 229, 231, 0.82);
+  line-height: 1.45;
 }
 
 .coach-header {
@@ -1768,6 +1798,7 @@ body.rtl .chat-bubble.user {
   .coach-layout,
   .fix-grid,
   .premium-grid,
+  .truth-ai-board,
   .transformation-head,
   .transform-block,
   .premium-payoff,
@@ -1850,6 +1881,17 @@ body.rtl .chat-bubble.user {
 
   .chat-bubble {
     max-width: 92%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
   }
 }
 

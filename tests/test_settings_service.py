@@ -15,6 +15,7 @@ def test_settings_service_masks_keys(tmp_path: Path):
             enable_llm_enhancements=True,
             openai_api_key="sk-test-123456789",
             gemini_api_key="AIza1234567890",
+            deepseek_api_key="ds-test-123456789",
         )
         write_local_settings(original_path, payload)
         refresh_settings()
@@ -22,6 +23,8 @@ def test_settings_service_masks_keys(tmp_path: Path):
         assert summary.llm_provider == "openai"
         assert summary.openai_key_masked.endswith("6789")
         assert "sk-" not in summary.openai_key_masked
+        assert summary.deepseek_key_masked.endswith("6789")
+        assert "ds-test" not in summary.deepseek_key_masked
     finally:
         if original_contents is None:
             if original_path.exists():

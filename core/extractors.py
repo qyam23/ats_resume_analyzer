@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from collections import Counter
 
+from core.keyword_intelligence import known_skill_vocabulary, section_aliases
 from core.schemas import ContactInfo, ExperienceEntry, ResumeStructuredData
 
 
@@ -29,7 +30,7 @@ SKILL_VOCAB = {
     "throughput", "kpi", "data analysis", "cross-functional", "stakeholder management",
     "equipment selection", "technical procurement", "materials engineering", "chemical engineering",
     "plc", "robotics", "lean", "six sigma",
-}
+} | known_skill_vocabulary()
 LEADERSHIP_TERMS = {
     "managed", "managing", "led", "leading", "mentored", "mentor", "owned", "ownership",
     "responsible", "guided", "guidance", "launched", "directed", "headed", "prioritize",
@@ -89,6 +90,8 @@ def _segment_sections(lines: list[str]) -> dict[str, str]:
         "professional experience": "experience",
         "work experience": "experience",
     }
+    for canonical, values in section_aliases().items():
+        aliases.update({value.lower(): canonical for value in values})
     titles = set(SECTION_TITLES + HEBREW_SECTION_TITLES + list(aliases))
     sections: dict[str, list[str]] = {"header": []}
     current = "header"
